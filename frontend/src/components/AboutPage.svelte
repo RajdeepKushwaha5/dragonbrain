@@ -124,7 +124,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
         <h3>Sparse Activation</h3>
-        <p>Only ~5% of neurons fire per token (vs ~99% in transformers). Each neuron represents <strong>one concept</strong> — natively monosemantic.</p>
+        <p>Only a small fraction of neurons fire per token (~5% in the paper's large models, vs ~99% in transformers). Each neuron represents <strong>one concept</strong> — natively monosemantic.</p>
       </div>
       <div class="pillar-card pillar-green">
         <div class="pillar-icon">
@@ -169,8 +169,8 @@
           </div>
           <p>
             The token embedding <code>v*</code> (dimension D=64) is projected into a much larger space (N=512 neurons per head)
-            through the <code>Decoder<sub>x</sub></code> matrix. ReLU zeros out all negative values, leaving only ~5% of neurons
-            with positive activations. Each active neuron corresponds to a specific feature the model has learned.
+            through the <code>Decoder<sub>x</sub></code> matrix. ReLU zeros out all negative values, leaving only a sparse subset of neurons
+            with positive activations (~5% in the paper's large models). Each active neuron corresponds to a specific feature the model has learned.
           </p>
         </div>
       </div>
@@ -263,7 +263,7 @@
           <tr>
             <td class="prop-name">Activation</td>
             <td>GELU/SwiGLU — nearly all neurons fire (~99%)</td>
-            <td class="bdh-val">ReLU — only ~5% of neurons fire</td>
+            <td class="bdh-val">ReLU — sparse activation (~5% at scale)</td>
           </tr>
           <tr>
             <td class="prop-name">Memory</td>
@@ -411,6 +411,8 @@
       <p>
         The weight matrices <code>Decoder<sub>x</sub></code>, <code>Decoder<sub>y</sub></code>, and <code>Encoder</code> are
         <strong>shared across all layers</strong> — the same projection is reused in every layer, a distinctive BDH design choice.
+        Note: the paper reports ~5% neuron sparsity for models with 32k+ neurons. This tiny model (1,024 neurons)
+        may show higher activation rates — sparsity increases with model scale.
       </p>
     </div>
   </section>

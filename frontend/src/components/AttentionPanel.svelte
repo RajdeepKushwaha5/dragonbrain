@@ -90,6 +90,8 @@
       $attentionScores.head,
       $tokenBuffer
     );
+  } else if (!$attentionScores && svgEl) {
+    d3.select(svgEl).selectAll('*').remove();
   }
 
   onMount(() => {

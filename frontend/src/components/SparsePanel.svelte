@@ -5,12 +5,16 @@
   import { flatActivations, sparsityStats, tokenBuffer } from '../lib/stores.js';
   import { generateDenseReference, countActive, TOTAL_NEURONS } from '../lib/activation_math.js';
 
-  $: denseActivations = generateDenseReference(new Uint8Array($tokenBuffer));
+  $: denseActivations = $tokenBuffer.length > 0
+    ? generateDenseReference(new Uint8Array($tokenBuffer))
+    : new Float32Array(TOTAL_NEURONS);
   $: denseStats = countActive(denseActivations);
 
-  $: sparsityDelta = denseStats.pct - parseFloat($sparsityStats.pct);
+  $: sparsityRatio = parseFloat($sparsityStats.pct) > 0
+    ? (denseStats.pct / parseFloat($sparsityStats.pct)).toFixed(0)
+    : '0';
   $: insightText = $sparsityStats.active > 0
-    ? `BDH uses <strong>${$sparsityStats.pct}%</strong> of neurons vs <strong>${denseStats.pct.toFixed(1)}%</strong> in transformers — a <strong>${sparsityDelta.toFixed(0)}×</strong> reduction in compute.`
+    ? `BDH uses <strong>${$sparsityStats.pct}%</strong> of neurons vs <strong>${denseStats.pct.toFixed(1)}%</strong> in transformers — a <strong>${sparsityRatio}×</strong> reduction in compute.`
     : '';
 </script>
 
@@ -22,7 +26,7 @@
         Sparse Activation
       </h3>
       <p class="panel-desc">
-        Each square = 1 neuron. Lit pixels = active neurons after ReLU. BDH achieves ~5% sparsity vs ~99% in transformers.
+        Each square = 1 neuron. Lit pixels = active neurons after ReLU. BDH achieves significant sparsity vs ~99% dense activation in transformers (~5% in the paper's large models).
       </p>
     </div>
   </div>
@@ -34,7 +38,7 @@
         active={$sparsityStats.active}
         total={$sparsityStats.total}
         pct={$sparsityStats.pct}
-        label="~5% expected"
+        label="sparse (paper: ~5% at scale)"
         color="var(--accent)"
       />
     </div>

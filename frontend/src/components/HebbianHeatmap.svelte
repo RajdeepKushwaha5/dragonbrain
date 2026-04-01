@@ -41,6 +41,10 @@
     const absMax = Math.max(...Array.from(submatrix).map(Math.abs));
     maxVal = absMax > 0 ? absMax : 1;
     renderHeatmap();
+  } else {
+    submatrix = new Float32Array(SIZE * SIZE);
+    maxVal = 1;
+    renderHeatmap();
   }
 
   function renderHeatmap() {

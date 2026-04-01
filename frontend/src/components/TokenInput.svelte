@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { inputText, tokenBuffer, tokenCount, inferring } from '../lib/stores.js';
+  import { inputText, tokenBuffer, inferring } from '../lib/stores.js';
   import { tokenize, tokenToChar } from '../lib/tokenizer.js';
 
   const dispatch = createEventDispatcher();
@@ -11,7 +11,6 @@
     const bytes = tokenize(textValue);
     const tail = Array.from(bytes.slice(-128));
     tokenBuffer.set(tail);
-    tokenCount.update(n => n + 1);
     dispatch('input', { text: textValue, tokens: tail });
   }
 

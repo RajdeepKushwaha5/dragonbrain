@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { BDHModel } from './lib/BDHModel.js';
   import { tokenize } from './lib/tokenizer.js';
+  import { tokenToChar } from './lib/tokenizer.js';
   import {
     inputText, tokenBuffer, inferenceData, sigmaData,
     modelReady, flatActivations, activeNeuronIds,
@@ -21,21 +22,44 @@
   let sigmaFlat = null;
   let totalTokens = 0;
   let currentPage = 'visualizer';
+  let inferenceMs = 0;
+  let lastLogits = null;
+  let topPredictions = [];
+  let generating = false;
 
   onMount(async () => {
     await model.load('./model.onnx');
     modelReady.set(true);
   });
 
+  let inferenceSeq = 0;
+
   async function handleInput(event) {
     const { tokens } = event.detail;
-    if (!tokens || tokens.length === 0 || !model.ready) return;
+    if (!tokens || tokens.length === 0) {
+      inferenceData.set(null);
+      sigmaFlat = null;
+      lastLogits = null;
+      topPredictions = [];
+      return;
+    }
+    if (!model.ready) return;
 
+    const seq = ++inferenceSeq;
     inferring.set(true);
 
     try {
+      const t0 = performance.now();
       const result = await model.runToken(tokens);
+      const t1 = performance.now();
+      if (seq !== inferenceSeq) return; // stale result from earlier keystroke
+
+      inferenceMs = Math.round(t1 - t0);
       inferenceData.set(result);
+
+      // Store logits for generation
+      lastLogits = result.logits || null;
+      topPredictions = model.topKPredictions(lastLogits, 5);
 
       const layer = result.layers[0];
       model.updateSigma(layer.x_last, layer.y_last, 0);
@@ -47,13 +71,70 @@
       totalTokens++;
       tokenCount.set(totalTokens);
 
-      sigmaFlat = model.getSigma($selectedLayer, $selectedHead);
+      // .slice() creates a new reference so Svelte detects the change
+      sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
       sigmaData.set({ ...model.sigma });
     } catch (err) {
       console.error('Inference error:', err);
     } finally {
-      inferring.set(false);
+      if (seq === inferenceSeq) inferring.set(false);
     }
+  }
+
+  async function handleGenerate() {
+    if (!model.ready || generating) return;
+    generating = true;
+
+    const GENERATE_COUNT = 32;
+    let currentTokens = [...$tokenBuffer];
+    if (currentTokens.length === 0) {
+      // Start with a space
+      currentTokens = [32];
+    }
+
+    for (let step = 0; step < GENERATE_COUNT; step++) {
+      if (!generating) break;
+
+      const t0 = performance.now();
+      const result = await model.runToken(currentTokens);
+      const t1 = performance.now();
+      inferenceMs = Math.round(t1 - t0);
+
+      if (!result.logits) break;
+
+      const nextToken = model.sampleFromLogits(result.logits, 0.8);
+      currentTokens.push(nextToken);
+      // Truncate to last 128
+      if (currentTokens.length > 128) {
+        currentTokens = currentTokens.slice(-128);
+      }
+
+      // Update all stores so panels animate
+      inferenceData.set(result);
+      lastLogits = result.logits;
+      topPredictions = model.topKPredictions(lastLogits, 5);
+      tokenBuffer.set(currentTokens);
+
+      const layer = result.layers[0];
+      model.updateSigma(layer.x_last, layer.y_last, 0);
+      if (result.layers.length > 1) {
+        model.updateSigma(result.layers[1].x_last, result.layers[1].y_last, 1);
+      }
+
+      totalTokens++;
+      tokenCount.set(totalTokens);
+      sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
+      sigmaData.set({ ...model.sigma });
+
+      // Small delay so user can see each step
+      await new Promise(r => setTimeout(r, 60));
+    }
+
+    generating = false;
+  }
+
+  function stopGeneration() {
+    generating = false;
   }
 
   function handleClearMemory() {
@@ -63,9 +144,12 @@
     sigmaFlat = null;
     sigmaData.set(null);
     inferenceData.set(null);
+    lastLogits = null;
+    topPredictions = [];
+    generating = false;
   }
 
-  $: sigmaFlat = model.getSigma($selectedLayer, $selectedHead);
+  $: sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
 </script>
 
 <main>
@@ -105,8 +189,39 @@
     <!-- ── Controls ── -->
     <section class="controls-section">
       <TokenInput on:input={handleInput} />
-      <LayerSelector />
+      <div class="controls-row">
+        <LayerSelector />
+        <div class="gen-controls">
+          {#if generating}
+            <button class="gen-btn gen-stop" on:click={stopGeneration}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+              Stop
+            </button>
+          {:else}
+            <button class="gen-btn" on:click={handleGenerate} disabled={!$modelReady}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Generate
+            </button>
+          {/if}
+          {#if inferenceMs > 0}
+            <span class="inference-time">{inferenceMs}ms</span>
+          {/if}
+        </div>
+      </div>
     </section>
+
+    <!-- ── Predictions Bar ── -->
+    {#if topPredictions.length > 0}
+      <section class="predictions-bar" aria-label="Next token predictions">
+        <span class="pred-label">Next:</span>
+        {#each topPredictions as pred}
+          <span class="pred-token" title="Byte {pred.token} — {(pred.prob * 100).toFixed(1)}%">
+            <span class="pred-char">{tokenToChar(pred.token)}</span>
+            <span class="pred-prob">{(pred.prob * 100).toFixed(0)}%</span>
+          </span>
+        {/each}
+      </section>
+    {/if}
 
     <!-- ── Panel Grid ── -->
     <section class="panels" aria-label="Visualization panels">
@@ -267,6 +382,118 @@
   /* ── Controls ── */
   .controls-section {
     margin-bottom: 1.2rem;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .gen-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
+  .gen-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background var(--transition-fast), box-shadow var(--transition-fast);
+    letter-spacing: 0.02em;
+  }
+
+  .gen-btn:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+  }
+
+  .gen-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .gen-stop {
+    color: #fb7185;
+    border-color: #fb7185;
+  }
+
+  .gen-stop:hover {
+    background: rgba(251, 113, 133, 0.1);
+    box-shadow: 0 0 12px rgba(251, 113, 133, 0.15);
+  }
+
+  .inference-time {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Predictions Bar ── */
+  .predictions-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    margin-bottom: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    overflow-x: auto;
+    flex-wrap: wrap;
+  }
+
+  .pred-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .pred-token {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 5px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    transition: background var(--transition-fast);
+    cursor: default;
+  }
+
+  .pred-token:hover {
+    background: rgba(59, 130, 246, 0.15);
+  }
+
+  .pred-char {
+    color: var(--text-primary);
+    font-weight: 600;
+    min-width: 0.8em;
+    text-align: center;
+  }
+
+  .pred-prob {
+    color: var(--text-dim);
+    font-size: 0.68rem;
   }
 
   /* ── Panels ── */

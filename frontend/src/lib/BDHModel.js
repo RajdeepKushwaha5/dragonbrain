@@ -79,6 +79,14 @@ export class BDHModel {
   _parseOutputs(results, T) {
     const data = { layers: [], T };
 
+    // Extract logits for text generation (last timestep only)
+    const logitsRaw = results['logits']?.data;
+    if (logitsRaw) {
+      const vocabSize = 256;
+      const start = (T - 1) * vocabSize;
+      data.logits = logitsRaw.slice(start, start + vocabSize);
+    }
+
     for (let l = 0; l < this.nLayers; l++) {
       const xFlat = results[`layer_${l}_x_sparse`].data;
       const yFlat = results[`layer_${l}_y_sparse`].data;
@@ -95,6 +103,73 @@ export class BDHModel {
     }
 
     return data;
+  }
+
+  /**
+   * Sample a byte token from logits using temperature-scaled softmax.
+   * @param {Float32Array} logits - Raw logits (vocab_size=256)
+   * @param {number} temperature - Sampling temperature (lower = more deterministic)
+   * @returns {number} Sampled byte token (0-255)
+   */
+  sampleFromLogits(logits, temperature = 0.8) {
+    if (!logits || logits.length === 0) return 0;
+
+    // Temperature scaling
+    const scaled = new Float32Array(logits.length);
+    let maxVal = -Infinity;
+    for (let i = 0; i < logits.length; i++) {
+      scaled[i] = logits[i] / temperature;
+      if (scaled[i] > maxVal) maxVal = scaled[i];
+    }
+
+    // Softmax with numerical stability
+    let sumExp = 0;
+    for (let i = 0; i < scaled.length; i++) {
+      scaled[i] = Math.exp(scaled[i] - maxVal);
+      sumExp += scaled[i];
+    }
+    for (let i = 0; i < scaled.length; i++) {
+      scaled[i] /= sumExp;
+    }
+
+    // Sample from distribution
+    const r = Math.random();
+    let cumulative = 0;
+    for (let i = 0; i < scaled.length; i++) {
+      cumulative += scaled[i];
+      if (r < cumulative) return i;
+    }
+    return scaled.length - 1;
+  }
+
+  /**
+   * Get top-k predicted next tokens from logits.
+   * @param {Float32Array} logits - Raw logits (vocab_size=256)
+   * @param {number} k - Number of top predictions
+   * @returns {Array<{token: number, prob: number}>}
+   */
+  topKPredictions(logits, k = 5) {
+    if (!logits || logits.length === 0) return [];
+
+    // Softmax
+    let maxVal = -Infinity;
+    for (let i = 0; i < logits.length; i++) {
+      if (logits[i] > maxVal) maxVal = logits[i];
+    }
+    const probs = new Float32Array(logits.length);
+    let sumExp = 0;
+    for (let i = 0; i < logits.length; i++) {
+      probs[i] = Math.exp(logits[i] - maxVal);
+      sumExp += probs[i];
+    }
+    for (let i = 0; i < probs.length; i++) {
+      probs[i] /= sumExp;
+    }
+
+    // Find top-k
+    const indexed = Array.from(probs).map((p, i) => ({ token: i, prob: p }));
+    indexed.sort((a, b) => b.prob - a.prob);
+    return indexed.slice(0, k);
   }
 
   /**

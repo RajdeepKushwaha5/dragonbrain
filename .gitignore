@@ -6,8 +6,10 @@ frontend/dist/
 
 # Python
 model/__pycache__/
-model/*.pt
+model/**/*.pt
 model/*.onnx
+model/data/
+model/checkpoints/
 *.pyc
 __pycache__/
 

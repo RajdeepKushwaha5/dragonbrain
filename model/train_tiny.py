@@ -103,9 +103,19 @@ def train(args):
     os.makedirs(os.path.dirname(CKPT_PATH), exist_ok=True)
 
     best_val = float("inf")
+    start_iter = 0
+
+    # Resume from checkpoint if requested
+    if args.resume and os.path.exists(CKPT_PATH):
+        ckpt = torch.load(CKPT_PATH, map_location=device, weights_only=False)
+        model.load_state_dict(ckpt["model"])
+        start_iter = ckpt.get("iter", 0)
+        best_val = ckpt.get("best_val", float("inf"))
+        print(f"Resumed from iter {start_iter} (best val loss {best_val:.4f})")
+
     t0 = time.time()
 
-    for it in range(args.max_iters):
+    for it in range(start_iter, args.max_iters):
         # Evaluate periodically
         if it % EVAL_INTERVAL == 0 or it == args.max_iters - 1:
             losses = estimate_loss(model, train_data, val_data, EVAL_ITERS, device)
@@ -119,7 +129,7 @@ def train(args):
             if losses["val"] < best_val:
                 best_val = losses["val"]
                 torch.save(
-                    {"model": model.state_dict(), "config": TINY_CONFIG, "iter": it},
+                    {"model": model.state_dict(), "config": TINY_CONFIG, "iter": it, "best_val": best_val},
                     CKPT_PATH,
                 )
                 print(f"  → saved checkpoint (val loss {best_val:.4f})")
@@ -155,5 +165,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train tiny BDH model")
     parser.add_argument("--device", default="auto", help="Device: auto, cpu, cuda")
     parser.add_argument("--max_iters", type=int, default=MAX_ITERS)
+    parser.add_argument("--resume", action="store_true", help="Resume from checkpoint")
     args = parser.parse_args()
     train(args)

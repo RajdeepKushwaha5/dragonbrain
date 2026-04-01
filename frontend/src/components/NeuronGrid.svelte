@@ -16,11 +16,18 @@
   const W = cols * (cellSize + gap);
   const H = rows * (cellSize + gap);
 
-  const colorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([0, 0.5]);
+  function getColorScale(acts) {
+    let maxVal = 0.5;
+    for (let i = 0; i < acts.length; i++) {
+      if (acts[i] > maxVal) maxVal = acts[i];
+    }
+    return d3.scaleSequential(d3.interpolateYlOrRd).domain([0, maxVal]);
+  }
 
   function renderGrid() {
     if (!svgEl) return;
     const svg = d3.select(svgEl);
+    const colorScale = getColorScale(activations);
 
     if (!initialized) {
       svg.attr('width', W).attr('height', H);
@@ -38,7 +45,7 @@
 
     svg.selectAll('rect')
       .data(Array.from(activations))
-      .attr('fill', v => (v > 1e-6 ? colorScale(Math.min(v, 0.5)) : 'rgba(255,255,255,0.03)'))
+      .attr('fill', v => (v > 1e-6 ? colorScale(v) : 'rgba(255,255,255,0.03)'))
       .attr('opacity', v => (v > 1e-6 ? 1 : 0.4));
   }
 

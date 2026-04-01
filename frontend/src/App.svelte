@@ -90,7 +90,9 @@
     topPredictions = [];
   }
 
-  $: sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
+  $: if ($selectedLayer !== undefined || $selectedHead !== undefined) {
+    sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
+  }
 </script>
 
 <main>

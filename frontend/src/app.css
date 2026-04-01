@@ -5,6 +5,7 @@
   /* Surface — true black + dark grays */
   --bg-root: #000000;
   --bg-card: #0a0a0a;
+  --bg-secondary: #050505;
   --bg-card-hover: #111111;
   --bg-elevated: #161616;
   --bg-input: #0d0d0d;

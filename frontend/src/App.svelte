@@ -25,6 +25,7 @@
   let lastLogits = null;
   let topPredictions = [];
   let generating = false;
+  let showGuide = false;
 
   onMount(async () => {
     await model.load('./model.onnx');
@@ -165,12 +166,40 @@
       </div>
     </div>
     <div class="header-right">
+      <button class="about-btn" on:click={() => showGuide = !showGuide}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="about-btn-text">Guide</span>
+      </button>
       <button class="about-btn" on:click={() => { currentPage = 'about'; window.scrollTo(0, 0); }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
         <span class="about-btn-text">About</span>
       </button>
     </div>
   </header>
+
+  <!-- ── Quick Guide Overlay ── -->
+  {#if showGuide}
+    <div class="guide-backdrop" on:click={() => showGuide = false} on:keydown={e => e.key === 'Escape' && (showGuide = false)} role="presentation"></div>
+    <div class="guide-panel" role="dialog" aria-label="Quick guide">
+      <div class="guide-header">
+        <h2 class="guide-title">
+          <span class="guide-icon">💡</span>
+          Quick Guide
+        </h2>
+        <button class="guide-close" on:click={() => showGuide = false} aria-label="Close guide">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <ol class="guide-steps">
+        <li><strong>Type text</strong> in the input box. The model processes each character as a byte token (0–255).</li>
+        <li><strong>Watch the panels</strong> update in real time — sparse activation grid, Hebbian heatmap, attention pattern, and active graph nodes all respond instantly.</li>
+        <li><strong>Switch layers and heads</strong> using L1/L2 and H1/H2 buttons. Different heads often specialise in different patterns.</li>
+        <li><strong>Explore the graph</strong> — switch between Gx (Thought Flow) and Gy (Memory Echo). Drag and zoom to inspect hub neurons.</li>
+        <li><strong>Generate text</strong> — click Generate to auto-complete 32 tokens and watch every panel animate step-by-step.</li>
+        <li><strong>Clear memory</strong> with the Clear button on the Hebbian panel, then retype to watch σ rebuild from scratch.</li>
+      </ol>
+    </div>
+  {/if}
 
   {#if currentPage === 'about'}
     <AboutPage on:back={() => currentPage = 'visualizer'} />
@@ -344,6 +373,123 @@
     color: var(--text-primary);
     box-shadow: 0 0 12px rgba(255, 255, 255, 0.06);
     transform: translateY(-1px);
+  }
+
+  /* ── Guide Overlay ── */
+  .guide-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 90;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .guide-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(520px, 92vw);
+    max-height: 80vh;
+    overflow-y: auto;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.8rem;
+    z-index: 100;
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.08), 0 8px 32px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.25s ease;
+  }
+
+  .guide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .guide-title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .guide-icon {
+    font-size: 1.2rem;
+  }
+
+  .guide-close {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 0.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+  }
+
+  .guide-close:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .guide-steps {
+    list-style: none;
+    counter-reset: guide;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .guide-steps li {
+    counter-increment: guide;
+    position: relative;
+    padding: 0.7rem 0.9rem 0.7rem 2.8rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    transition: border-color var(--transition-fast);
+  }
+
+  .guide-steps li:hover {
+    border-color: var(--border-hover);
+  }
+
+  .guide-steps li::before {
+    content: counter(guide);
+    position: absolute;
+    left: 0.75rem;
+    top: 0.65rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+
+  .guide-steps li strong {
+    color: var(--text-primary);
   }
 
   /* ── Loading ── */

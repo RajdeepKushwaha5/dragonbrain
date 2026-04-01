@@ -1,14 +1,10 @@
 <script>
-  import { createEventDispatcher, onDestroy } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { inputText, tokenBuffer, inferring } from '../lib/stores.js';
   import { tokenize, tokenToChar } from '../lib/tokenizer.js';
 
   const dispatch = createEventDispatcher();
   let textValue = '';
-
-  // Sync textarea when inputText store changes externally (e.g. Generate)
-  const unsub = inputText.subscribe(v => { textValue = v; });
-  onDestroy(unsub);
 
   function handleInput() {
     inputText.set(textValue);

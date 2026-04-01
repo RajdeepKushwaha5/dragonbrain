@@ -106,43 +106,6 @@ export class BDHModel {
   }
 
   /**
-   * Sample a byte token from logits using temperature-scaled softmax.
-   * @param {Float32Array} logits - Raw logits (vocab_size=256)
-   * @param {number} temperature - Sampling temperature (lower = more deterministic)
-   * @returns {number} Sampled byte token (0-255)
-   */
-  sampleFromLogits(logits, temperature = 0.8) {
-    if (!logits || logits.length === 0) return 0;
-
-    // Temperature scaling
-    const scaled = new Float32Array(logits.length);
-    let maxVal = -Infinity;
-    for (let i = 0; i < logits.length; i++) {
-      scaled[i] = logits[i] / temperature;
-      if (scaled[i] > maxVal) maxVal = scaled[i];
-    }
-
-    // Softmax with numerical stability
-    let sumExp = 0;
-    for (let i = 0; i < scaled.length; i++) {
-      scaled[i] = Math.exp(scaled[i] - maxVal);
-      sumExp += scaled[i];
-    }
-    for (let i = 0; i < scaled.length; i++) {
-      scaled[i] /= sumExp;
-    }
-
-    // Sample from distribution
-    const r = Math.random();
-    let cumulative = 0;
-    for (let i = 0; i < scaled.length; i++) {
-      cumulative += scaled[i];
-      if (r < cumulative) return i;
-    }
-    return scaled.length - 1;
-  }
-
-  /**
    * Get top-k predicted next tokens from logits.
    * @param {Float32Array} logits - Raw logits (vocab_size=256)
    * @param {number} k - Number of top predictions

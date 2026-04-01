@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { BDHModel } from './lib/BDHModel.js';
-  import { tokenize, detokenize, tokenToChar } from './lib/tokenizer.js';
+  import { tokenize, tokenToChar } from './lib/tokenizer.js';
   import {
     inputText, tokenBuffer, inferenceData, sigmaData,
     modelReady, flatActivations, activeNeuronIds,
@@ -24,7 +24,6 @@
   let inferenceMs = 0;
   let lastLogits = null;
   let topPredictions = [];
-  let generating = false;
   let showGuide = false;
 
   onMount(async () => {
@@ -57,7 +56,6 @@
       inferenceMs = Math.round(t1 - t0);
       inferenceData.set(result);
 
-      // Store logits for generation
       lastLogits = result.logits || null;
       topPredictions = model.topKPredictions(lastLogits, 5);
 
@@ -81,63 +79,6 @@
     }
   }
 
-  async function handleGenerate() {
-    if (!model.ready || generating) return;
-    generating = true;
-
-    const GENERATE_COUNT = 32;
-    let currentTokens = [...$tokenBuffer];
-    if (currentTokens.length === 0) {
-      // Start with a space
-      currentTokens = [32];
-    }
-
-    for (let step = 0; step < GENERATE_COUNT; step++) {
-      if (!generating) break;
-
-      const t0 = performance.now();
-      const result = await model.runToken(currentTokens);
-      const t1 = performance.now();
-      inferenceMs = Math.round(t1 - t0);
-
-      if (!result.logits) break;
-
-      const nextToken = model.sampleFromLogits(result.logits, 0.8);
-      currentTokens.push(nextToken);
-      // Truncate to last 128
-      if (currentTokens.length > 128) {
-        currentTokens = currentTokens.slice(-128);
-      }
-
-      // Update all stores so panels animate
-      inferenceData.set(result);
-      lastLogits = result.logits;
-      topPredictions = model.topKPredictions(lastLogits, 5);
-      tokenBuffer.set(currentTokens);
-      inputText.set(detokenize(currentTokens));
-
-      const layer = result.layers[0];
-      model.updateSigma(layer.x_last, layer.y_last, 0);
-      if (result.layers.length > 1) {
-        model.updateSigma(result.layers[1].x_last, result.layers[1].y_last, 1);
-      }
-
-      totalTokens++;
-      tokenCount.set(totalTokens);
-      sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
-      sigmaData.set({ ...model.sigma });
-
-      // Small delay so user can see each step
-      await new Promise(r => setTimeout(r, 60));
-    }
-
-    generating = false;
-  }
-
-  function stopGeneration() {
-    generating = false;
-  }
-
   function handleClearMemory() {
     model.resetMemory();
     totalTokens = 0;
@@ -147,7 +88,6 @@
     inferenceData.set(null);
     lastLogits = null;
     topPredictions = [];
-    generating = false;
   }
 
   $: sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
@@ -195,7 +135,6 @@
         <li><strong>Watch the panels</strong> update in real time — sparse activation grid, Hebbian heatmap, attention pattern, and active graph nodes all respond instantly.</li>
         <li><strong>Switch layers and heads</strong> using L1/L2 and H1/H2 buttons. Different heads often specialise in different patterns.</li>
         <li><strong>Explore the graph</strong> — switch between Gx (Thought Flow) and Gy (Memory Echo). Drag and zoom to inspect hub neurons.</li>
-        <li><strong>Generate text</strong> — click Generate to auto-complete 32 tokens and watch every panel animate step-by-step.</li>
         <li><strong>Clear memory</strong> with the Clear button on the Hebbian panel, then retype to watch σ rebuild from scratch.</li>
       </ol>
     </div>
@@ -220,22 +159,9 @@
       <TokenInput on:input={handleInput} />
       <div class="controls-row">
         <LayerSelector />
-        <div class="gen-controls">
-          {#if generating}
-            <button class="gen-btn gen-stop" on:click={stopGeneration}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
-              Stop
-            </button>
-          {:else}
-            <button class="gen-btn" on:click={handleGenerate} disabled={!$modelReady}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Generate
-            </button>
-          {/if}
-          {#if inferenceMs > 0}
-            <span class="inference-time">{inferenceMs}ms</span>
-          {/if}
-        </div>
+        {#if inferenceMs > 0}
+          <span class="inference-time">{inferenceMs}ms</span>
+        {/if}
       </div>
     </section>
 
@@ -538,51 +464,8 @@
     flex-wrap: wrap;
   }
 
-  .gen-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-left: auto;
-  }
-
-  .gen-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.8rem;
-    font-size: 0.78rem;
-    font-family: var(--font-mono);
-    font-weight: 500;
-    color: var(--accent);
-    background: transparent;
-    border: 1px solid var(--accent);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background var(--transition-fast), box-shadow var(--transition-fast);
-    letter-spacing: 0.02em;
-  }
-
-  .gen-btn:hover:not(:disabled) {
-    background: rgba(59, 130, 246, 0.1);
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
-  }
-
-  .gen-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .gen-stop {
-    color: #fb7185;
-    border-color: #fb7185;
-  }
-
-  .gen-stop:hover {
-    background: rgba(251, 113, 133, 0.1);
-    box-shadow: 0 0 12px rgba(251, 113, 133, 0.15);
-  }
-
   .inference-time {
+    margin-left: auto;
     font-family: var(--font-mono);
     font-size: 0.72rem;
     color: var(--text-dim);

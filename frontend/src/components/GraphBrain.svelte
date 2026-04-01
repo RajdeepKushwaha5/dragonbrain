@@ -12,7 +12,7 @@
   function cloneGraph(g) {
     return {
       nodes: g.nodes.map(n => ({ ...n })),
-      links: g.links.map(l => ({ ...l })),
+      links: g.links.filter(l => l.source !== l.target).map(l => ({ ...l })),
       threshold: g.threshold,
     };
   }

@@ -1,8 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { BDHModel } from './lib/BDHModel.js';
-  import { tokenize } from './lib/tokenizer.js';
-  import { tokenToChar } from './lib/tokenizer.js';
+  import { tokenize, detokenize, tokenToChar } from './lib/tokenizer.js';
   import {
     inputText, tokenBuffer, inferenceData, sigmaData,
     modelReady, flatActivations, activeNeuronIds,
@@ -114,6 +113,7 @@
       lastLogits = result.logits;
       topPredictions = model.topKPredictions(lastLogits, 5);
       tokenBuffer.set(currentTokens);
+      inputText.set(detokenize(currentTokens));
 
       const layer = result.layers[0];
       model.updateSigma(layer.x_last, layer.y_last, 0);

@@ -3,7 +3,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 
 export default defineConfig({
   plugins: [svelte()],
-  base: './',
+  base: '/',
   build: {
     outDir: 'dist',
     assetsInlineLimit: 0,

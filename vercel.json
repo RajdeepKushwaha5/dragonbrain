@@ -1,0 +1,18 @@
+{
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
+  "framework": null,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/((?!assets|model\\.onnx|model\\.onnx\\.data).*)", "destination": "/index.html" }
+  ]
+}

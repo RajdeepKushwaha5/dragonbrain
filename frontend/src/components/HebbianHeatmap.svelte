@@ -609,7 +609,7 @@
     text-align: right;
   }
 
-  .pair-value-positive { color: var(--emerald); }
+  .pair-value-positive { color: var(--green); }
   .pair-value-negative { color: var(--rose); }
 
   .pair-bar-track {

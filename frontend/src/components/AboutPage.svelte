@@ -147,8 +147,8 @@
         <h3>Linear Attention</h3>
         <p>No softmax. Uses RoPE rotation with a causal mask. Q=K=x (same vector!), making attention a <strong>self-correlation</strong> readout.</p>
       </div>
-      <div class="pillar-card" style="border-color: rgba(168, 85, 247, 0.25); --pillar-accent: #a855f7;">
-        <div class="pillar-icon" style="color: #a855f7;">
+      <div class="pillar-card" style="border-color: rgba(155, 126, 240, 0.25); --pillar-accent: #9b7ef0;">
+        <div class="pillar-icon" style="color: #9b7ef0;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="8" height="10" rx="1"/><rect x="14" y="7" width="8" height="10" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         </div>
         <h3>Composable Merging</h3>
@@ -619,7 +619,7 @@
   }
 
   .hero-gradient {
-    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 40%, #f472b6 100%);
+    background: linear-gradient(135deg, #7da8f5 0%, #9b7ef0 40%, #f06292 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -953,7 +953,7 @@
     font-family: var(--font-mono);
     font-size: 0.95rem;
     font-weight: 500;
-    color: #93c5fd;
+    color: #7da8f5;
     background: none;
     border: none;
     padding: 0;
@@ -979,7 +979,7 @@
     border-left-color: var(--gold);
   }
 
-  .formula-gold code { color: #fde68a; }
+  .formula-gold code { color: #f5dfa0; }
   .formula-gold .formula-label {
     color: var(--gold);
     background: rgba(240, 194, 70, 0.12);
@@ -991,7 +991,7 @@
     border-left-color: var(--green);
   }
 
-  .formula-green code { color: #86efac; }
+  .formula-green code { color: #7ee8b4; }
   .formula-green .formula-label {
     color: var(--green);
     background: rgba(61, 214, 140, 0.12);
@@ -1035,7 +1035,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #9b7ef0 100%);
     color: #fff;
     font-family: var(--font-mono);
     font-size: 0.88rem;
@@ -1301,7 +1301,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, #9b7ef0 100%);
     color: #fff;
     font-family: var(--font-mono);
     font-size: 0.75rem;

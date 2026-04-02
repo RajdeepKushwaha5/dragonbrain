@@ -35,7 +35,7 @@
         const flatIdx = head * T * T + r * T + c;
         matrix.push({
           row, col,
-          value: r <= c ? 0 : (scores[flatIdx] || 0),  // lower-tri only (causal mask)
+          value: r < c ? 0 : (scores[flatIdx] || 0),  // lower-tri only (causal mask)
         });
       }
     }

@@ -14,9 +14,9 @@
 
   // Community color palette
   const COMMUNITY_PALETTE = [
-    '#3b82f6', '#f59e0b', '#10b981', '#ef4444',
-    '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
-    '#14b8a6', '#a855f7', '#eab308', '#64748b',
+    '#5b8def', '#f0c246', '#3dd68c', '#f06292',
+    '#9b7ef0', '#e879a8', '#4dd0e1', '#f58b42',
+    '#2ec4b6', '#b07ef0', '#d4a832', '#7b8394',
   ];
 
   function detectCommunities(nodes, links) {
@@ -62,7 +62,7 @@
   }
 
   function getCommunityColor(nodeId) {
-    if (!showCommunities || communityMap[nodeId] === undefined) return '#3b82f6';
+    if (!showCommunities || communityMap[nodeId] === undefined) return '#5b8def';
     const ids = [...new Set(Object.values(communityMap))].sort((a,b) => a - b);
     const idx = ids.indexOf(communityMap[nodeId]);
     return COMMUNITY_PALETTE[idx % COMMUNITY_PALETTE.length];
@@ -140,7 +140,7 @@
 
     // Create glow gradient per community color
     const usedColors = new Set(data.nodes.map(n => getCommunityColor(n.id)));
-    usedColors.add('#facc15'); // active gold
+    usedColors.add('#f0c246'); // active gold
     for (const color of usedColors) {
       const gid = `node-glow-${color.replace('#', '')}`;
       const grad = defs.append('radialGradient').attr('id', gid);
@@ -161,7 +161,7 @@
       .data(data.links)
       .enter()
       .append('line')
-      .attr('stroke', d => d.excitatory ? 'rgba(59,130,246,0.4)' : 'rgba(244,63,94,0.3)')
+      .attr('stroke', d => d.excitatory ? 'rgba(91,141,239,0.4)' : 'rgba(240,98,146,0.3)')
       .attr('stroke-width', d => Math.max(0.3, Math.abs(d.weight) * 3));
 
     // Node glow
@@ -237,17 +237,17 @@
   $: if (container && currentData) {
     d3.select(container).selectAll('circle.node')
       .attr('fill', d => {
-        if (!d) return '#3b82f6';
-        return activeNeuronIds.has(d.id) ? '#facc15' : getCommunityColor(d.id);
+        if (!d) return '#5b8def';
+        return activeNeuronIds.has(d.id) ? '#f0c246' : getCommunityColor(d.id);
       })
       .attr('stroke', d => {
         if (!d) return 'rgba(255,255,255,0.15)';
-        return activeNeuronIds.has(d.id) ? 'rgba(250,204,21,0.5)' : 'rgba(255,255,255,0.15)';
+        return activeNeuronIds.has(d.id) ? 'rgba(240,194,70,0.5)' : 'rgba(255,255,255,0.15)';
       });
     d3.select(container).selectAll('circle.glow')
       .attr('fill', d => {
-        if (!d) return 'url(#node-glow-3b82f6)';
-        const c = activeNeuronIds.has(d.id) ? '#facc15' : getCommunityColor(d.id);
+        if (!d) return 'url(#node-glow-5b8def)';
+        const c = activeNeuronIds.has(d.id) ? '#f0c246' : getCommunityColor(d.id);
         return `url(#node-glow-${c.replace('#', '')})`;
       });
   }
@@ -339,7 +339,7 @@
         {/each}
       {:else}
         <div class="legend-item">
-          <span class="legend-circle" style="background: #3b82f6;"></span>
+          <span class="legend-circle" style="background: #5b8def;"></span>
           <span>Excitatory</span>
         </div>
         <div class="legend-item">

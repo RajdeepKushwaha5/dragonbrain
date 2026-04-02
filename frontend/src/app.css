@@ -34,6 +34,7 @@
   --rose: #f06292;
   --rose-glow: rgba(240, 98, 146, 0.08);
   --cyan: #4dd0e1;
+  --violet: #9b7ef0;
 
   /* Shadows */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.2);

@@ -54,7 +54,7 @@
       if (i === 0) ctx.moveTo(0, y);
       else ctx.lineTo(i * stepX, y);
     });
-    ctx.strokeStyle = '#3b82f6';
+    ctx.strokeStyle = '#5b8def';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -63,7 +63,7 @@
     const lastY = SPARK_H - (lastPt.pct / maxPct) * (SPARK_H - 4);
     ctx.beginPath();
     ctx.arc((pts.length - 1) * stepX, lastY, 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#60a5fa';
+    ctx.fillStyle = '#7da8f5';
     ctx.fill();
   }
 </script>

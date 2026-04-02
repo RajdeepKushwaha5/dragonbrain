@@ -84,7 +84,7 @@
     <line
       x1={crossoverX} y1={pad.top}
       x2={crossoverX} y2={pad.top + plotH}
-      stroke="rgba(250,204,21,0.25)"
+      stroke="rgba(240,194,70,0.25)"
       stroke-width="1"
       stroke-dasharray="3,3"
     />
@@ -94,7 +94,7 @@
     <line
       x1={pad.left} y1={sigmaY}
       x2={W - pad.right} y2={sigmaY}
-      stroke="#3b82f6" stroke-width="2"
+      stroke="#5b8def" stroke-width="2"
     />
     <text x={W - pad.right + 3} y={sigmaY + 3} class="line-label sigma-label">σ</text>
 
@@ -115,7 +115,7 @@
         stroke-dasharray="2,2"
       />
       <!-- σ dot -->
-      <circle cx={cursorX} cy={sigmaY} r="3.5" fill="#3b82f6" stroke="#fff" stroke-width="0.5" />
+      <circle cx={cursorX} cy={sigmaY} r="3.5" fill="#5b8def" stroke="#fff" stroke-width="0.5" />
       <!-- KV dot -->
       <circle cx={cursorX} cy={cursorKvY} r="3.5" fill="var(--rose)" stroke="#fff" stroke-width="0.5" />
     {/if}
@@ -217,7 +217,7 @@
     font-weight: 700;
   }
 
-  .sigma-label { fill: #3b82f6; }
+  .sigma-label { fill: #5b8def; }
   .kv-label { fill: var(--rose); }
 
   .stats-row {
@@ -241,7 +241,7 @@
     flex-shrink: 0;
   }
 
-  .sigma-dot { background: #3b82f6; }
+  .sigma-dot { background: #5b8def; }
   .kv-dot { background: var(--rose); }
 
   .stat-label {

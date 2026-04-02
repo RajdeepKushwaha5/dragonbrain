@@ -90,10 +90,10 @@ export class BDHModel {
     }
 
     for (let l = 0; l < this.nLayers; l++) {
-      const xFlat = results[`layer_${l}_x_sparse`].data;
-      const yFlat = results[`layer_${l}_y_sparse`].data;
-      const xyFlat = results[`layer_${l}_xy_sparse`].data;
-      const attnFlat = results[`layer_${l}_attn_scores`].data;
+      const xFlat = results[`layer_${l}_x_sparse`]?.data;
+      const yFlat = results[`layer_${l}_y_sparse`]?.data;
+      const xyFlat = results[`layer_${l}_xy_sparse`]?.data;
+      const attnFlat = results[`layer_${l}_attn_scores`]?.data;
 
       data.layers.push({
         x_last: extractLastToken(xFlat, T),

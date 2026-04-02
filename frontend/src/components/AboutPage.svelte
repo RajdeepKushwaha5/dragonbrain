@@ -5,7 +5,7 @@
   const tocItems = [
     { id: 'what', label: 'What is this?' },
     { id: 'why', label: 'Why BDH?' },
-    { id: 'pillars', label: '4 Pillars' },
+    { id: 'pillars', label: '5 Pillars' },
     { id: 'arch', label: 'Architecture' },
     { id: 'compare', label: 'BDH vs Transformers' },
     { id: 'panels', label: 'Visualizer Panels' },
@@ -62,7 +62,7 @@
     <p>
       Instead of just reading about BDH, you can <em>type text</em> and watch the architecture respond in real time:
       see which neurons fire, how attention flows between tokens, how the Hebbian memory matrix builds up,
-      and how the emergent graph structure organises computation.
+      and how the emergent graph structure organizes computation.
     </p>
     <div class="callout">
       <div class="callout-icon">
@@ -111,13 +111,13 @@
     </div>
     <p>
       BDH addresses <strong>all four</strong> by drawing inspiration from neuroscience — specifically, how biological brains
-      use sparse coding, Hebbian learning, and modular organisation.
+      use sparse coding, Hebbian learning, and modular organization.
     </p>
   </section>
 
-  <!-- ── Section 2.5: The 4 Pillars ── -->
+  <!-- ── Section 2.5: The 5 Pillars ── -->
   <section class="section" id="pillars">
-    <h2><span class="section-num">03</span> The 4 Pillars of BDH</h2>
+    <h2><span class="section-num">03</span> The 5 Pillars of BDH</h2>
     <div class="pillar-grid">
       <div class="pillar-card pillar-blue">
         <div class="pillar-icon">
@@ -245,7 +245,7 @@
           </div>
           <p>
             The y activations are mapped back to the D-dimensional embedding space
-            using the <code>Encoder</code> matrix and added as a residual. Layer normalisation (without learnable
+            using the <code>Encoder</code> matrix and added as a residual. Layer normalization (without learnable
             affine parameters) is applied before and after. The updated v* feeds into the next layer.
           </p>
         </div>
@@ -333,7 +333,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="19" r="2"/><line x1="7" y1="7" x2="11" y2="17"/><line x1="17" y1="7" x2="13" y2="17"/><line x1="7" y1="6" x2="17" y2="6"/></svg>
           <h3>Emergent Graph Panel</h3>
         </div>
-        <p>Visualises the internal wiring structure using D3 force-directed layout. Two modes:</p>
+        <p>Visualizes the internal wiring structure using D3 force-directed layout. Two modes:</p>
         <div class="guide-modes">
           <div class="guide-mode">
             <div class="formula formula-sm">
@@ -362,7 +362,7 @@
           <h3>Hebbian Memory (σ) Panel</h3>
         </div>
         <p>
-          Displays a 64&times;64 heatmap of the most active rows/columns of the σ matrix. Viridis colour scale
+          Displays a 64&times;64 heatmap of the most active rows/columns of the σ matrix. Viridis color scale
           maps connection strength from 0 (dark) to strong (yellow).
         </p>
         <div class="formula formula-gold formula-sm">
@@ -433,7 +433,7 @@
         <h3>Monosemantic Neurons</h3>
         <p>
           In transformers, individual neurons often respond to multiple unrelated concepts (polysemantic).
-          BDH's sparse ReLU naturally forces each neuron to specialise in <strong>one concept</strong>
+          BDH's sparse ReLU naturally forces each neuron to specialize in <strong>one concept</strong>
           (monosemantic). When neuron #247 fires, it means one specific thing — you don't need a Sparse
           AutoEncoder to decode it.
         </p>
@@ -459,7 +459,7 @@
         <p>
           The emergent graph topology follows a power law degree distribution — a few hub neurons have
           many connections while most neurons have few. This mirrors biological neural networks, the internet,
-          and social networks. This structure was <strong>not designed</strong> — it emerged from random initialisation.
+          and social networks. This structure was <strong>not designed</strong> — it emerged from random initialization.
         </p>
       </div>
 
@@ -494,7 +494,7 @@
         attention pattern, and active graph nodes all respond instantly.
       </li>
       <li>
-        <strong>Switch layers and heads</strong> using L1/L2 and H1/H2 buttons. Different heads often specialise
+        <strong>Switch layers and heads</strong> using L1/L2 and H1/H2 buttons. Different heads often specialize
         in different patterns.
       </li>
       <li>

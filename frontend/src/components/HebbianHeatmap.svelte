@@ -195,7 +195,7 @@
 
   <p class="footnote">
     The 64×64 heatmap shows the top hub neurons from σ ∈ ℝ<sup>N×N</sup>.
-    Coloured outlines mark <strong>discovered synapse concepts</strong> — semantically meaningful
+    Colored outlines mark <strong>discovered synapse concepts</strong> — semantically meaningful
     connection clusters (Section 6 of the paper).
     {#if tokenCount > 0}
       <span class="token-counter">{tokenCount} tokens encoded</span>

@@ -262,7 +262,7 @@
       Toggle to "Trained" to see the scale-free graph emerge.
     {:else}
       This structure <strong>self-organized from random weights</strong> during training.
-      Hub neurons act as real organizational centres — the graph is scale-free (Section 5 of the paper).
+      Hub neurons act as real organizational centers — the graph is scale-free (Section 5 of the paper).
       {#if !showEvolution}Click <em>Evolution</em> to compare with random init.{/if}
     {/if}
     <span class="formula">{modeInfo[graphMode].formula}</span>

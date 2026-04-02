@@ -192,7 +192,7 @@
       <ol class="guide-steps">
         <li><strong>Type text</strong> in the input box. The model processes each character as a byte token (0–255).</li>
         <li><strong>Watch the panels</strong> update in real time — sparse activation grid, Hebbian heatmap, attention pattern, and active graph nodes all respond instantly.</li>
-        <li><strong>Switch layers and heads</strong> using L1/L2 and H1/H2 buttons. Different heads often specialise in different patterns.</li>
+        <li><strong>Switch layers and heads</strong> using L1/L2 and H1/H2 buttons. Different heads often specialize in different patterns.</li>
         <li><strong>Explore the graph</strong> — switch between Gx (Thought Flow) and Gy (Memory Echo). Drag and zoom to inspect hub neurons.</li>
         <li><strong>Clear memory</strong> with the Clear button on the Hebbian panel, then retype to watch σ rebuild from scratch.</li>
       </ol>

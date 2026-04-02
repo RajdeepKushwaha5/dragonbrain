@@ -407,7 +407,7 @@
       <div class="config-item"><span class="config-label">Neurons/Head (N)</span><span class="config-value">512</span></div>
       <div class="config-item"><span class="config-label">Total Neurons</span><span class="config-value">1,024</span></div>
       <div class="config-item"><span class="config-label">Vocab Size</span><span class="config-value">256</span></div>
-      <div class="config-item"><span class="config-label">Max Sequence</span><span class="config-value">256</span></div>
+      <div class="config-item"><span class="config-label">Max Sequence</span><span class="config-value">128</span></div>
       <div class="config-item"><span class="config-label">Runtime</span><span class="config-value">ONNX+WASM</span></div>
     </div>
 

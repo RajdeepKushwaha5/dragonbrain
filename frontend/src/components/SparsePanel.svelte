@@ -2,20 +2,70 @@
   import NeuronGrid from './NeuronGrid.svelte';
   import StatsBar from './StatsBar.svelte';
   import InsightBadge from './InsightBadge.svelte';
-  import { flatActivations, sparsityStats, tokenBuffer } from '../lib/stores.js';
-  import { generateDenseReference, countActive, TOTAL_NEURONS } from '../lib/activation_math.js';
+  import { flatActivations, sparsityStats, gptActivations, gptSparsityStats, gptReady, sparsityHistory } from '../lib/stores.js';
+  import { TOTAL_NEURONS } from '../lib/activation_math.js';
 
-  $: denseActivations = $tokenBuffer.length > 0
-    ? generateDenseReference(new Uint8Array($tokenBuffer))
-    : new Float32Array(TOTAL_NEURONS);
-  $: denseStats = countActive(denseActivations);
+  // Real GPT activations from ONNX inference (256 neurons, ~97-100% density)
+  $: gptActs = $gptActivations || new Float32Array(256);
+  $: gptStats = $gptSparsityStats;
 
-  $: sparsityRatio = parseFloat($sparsityStats.pct) > 0
-    ? (denseStats.pct / parseFloat($sparsityStats.pct)).toFixed(0)
+  $: sparsityRatio = parseFloat(gptStats.pct) > 0 && parseFloat($sparsityStats.pct) > 0
+    ? (parseFloat(gptStats.pct) / parseFloat($sparsityStats.pct)).toFixed(0)
     : '0';
-  $: insightText = $sparsityStats.active > 0
-    ? `BDH uses <strong>${$sparsityStats.pct}%</strong> of neurons vs <strong>${denseStats.pct.toFixed(1)}%</strong> in transformers — a <strong>${sparsityRatio}×</strong> reduction in compute.`
+
+  $: insightText = $sparsityStats.active > 0 && gptStats.active > 0
+    ? `BDH fires <strong>${$sparsityStats.pct}%</strong> of ${$sparsityStats.total} neurons vs GPT's <strong>${gptStats.pct}%</strong> of ${gptStats.total} — same input, real models, ${sparsityRatio}× difference.`
     : '';
+
+  // Sparkline drawing
+  let sparkCanvas;
+  const SPARK_W = 200, SPARK_H = 32;
+
+  $: if (sparkCanvas && $sparsityHistory.length > 1) {
+    drawSparkline($sparsityHistory);
+  }
+
+  function drawSparkline(history) {
+    const ctx = sparkCanvas.getContext('2d');
+    ctx.clearRect(0, 0, SPARK_W, SPARK_H);
+
+    const pts = history.slice(-60);
+    if (pts.length < 2) return;
+
+    const maxPct = Math.max(15, ...pts.map(p => p.pct));
+    const stepX = SPARK_W / (pts.length - 1);
+
+    // Fill area
+    ctx.beginPath();
+    ctx.moveTo(0, SPARK_H);
+    pts.forEach((p, i) => {
+      const y = SPARK_H - (p.pct / maxPct) * (SPARK_H - 4);
+      ctx.lineTo(i * stepX, y);
+    });
+    ctx.lineTo((pts.length - 1) * stepX, SPARK_H);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(59, 130, 246, 0.08)';
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const y = SPARK_H - (p.pct / maxPct) * (SPARK_H - 4);
+      if (i === 0) ctx.moveTo(0, y);
+      else ctx.lineTo(i * stepX, y);
+    });
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Current dot
+    const lastPt = pts[pts.length - 1];
+    const lastY = SPARK_H - (lastPt.pct / maxPct) * (SPARK_H - 4);
+    ctx.beginPath();
+    ctx.arc((pts.length - 1) * stepX, lastY, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fill();
+  }
 </script>
 
 <div class="panel">
@@ -26,19 +76,20 @@
         Sparse Activation
       </h3>
       <p class="panel-desc">
-        Each square = 1 neuron. Lit pixels = active neurons after ReLU. BDH achieves significant sparsity vs ~99% dense activation in transformers (~5% in the paper's large models).
+        Each square = 1 neuron. Lit pixels = active after {$gptReady ? 'ReLU (BDH) vs GELU (GPT)' : 'ReLU'}.
+        Both models run on the same input — the density difference is real.
       </p>
     </div>
   </div>
 
   <div class="comparison">
     <div class="side">
-      <NeuronGrid activations={$flatActivations} label="BDH (Sparse)" accentColor="var(--accent)" />
+      <NeuronGrid activations={$flatActivations} label="BDH · {$sparsityStats.total} neurons" accentColor="var(--accent)" />
       <StatsBar
         active={$sparsityStats.active}
         total={$sparsityStats.total}
         pct={$sparsityStats.pct}
-        label="sparse (paper: ~5% at scale)"
+        label="ReLU sparse (~5% at scale)"
         color="var(--accent)"
       />
     </div>
@@ -50,14 +101,20 @@
     </div>
 
     <div class="side">
-      <NeuronGrid activations={denseActivations} label="Transformer (Dense)" accentColor="var(--rose)" />
-      <StatsBar
-        active={denseStats.count}
-        total={denseStats.total}
-        pct={denseStats.pct.toFixed(1)}
-        label="~97% typical"
-        color="var(--rose)"
-      />
+      {#if $gptReady}
+        <NeuronGrid activations={gptActs} label="GPT · {gptStats.total} neurons" accentColor="var(--rose)" cols={16} rows={16} />
+        <StatsBar
+          active={gptStats.active}
+          total={gptStats.total}
+          pct={gptStats.pct}
+          label="GELU dense (real GPT)"
+          color="var(--rose)"
+        />
+      {:else}
+        <div class="gpt-loading">
+          <span class="gpt-loading-text">Loading transformer…</span>
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -73,6 +130,23 @@
       type="wow"
       text="Sparsity above 6% — the model is <em>more surprised</em>! Novel input activates more neurons. This is BDH's uncertainty indicator."
     />
+  {/if}
+
+  <!-- Sparsity Sparkline — Novel insight: sparsity tracks uncertainty -->
+  {#if $sparsityHistory.length > 2}
+    <div class="sparkline-section">
+      <div class="sparkline-header">
+        <span class="sparkline-label">Sparsity Over Time</span>
+        <span class="sparkline-hint">↑ novel input &nbsp; ↓ predictable text</span>
+      </div>
+      <canvas
+        bind:this={sparkCanvas}
+        width={SPARK_W}
+        height={SPARK_H}
+        class="sparkline-canvas"
+        aria-label="Sparsity trend over keystrokes"
+      ></canvas>
+    </div>
   {/if}
 </div>
 
@@ -156,6 +230,52 @@
     font-weight: 700;
     color: var(--text-dim);
     letter-spacing: 0.1em;
+  }
+
+  .gpt-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    min-width: 180px;
+  }
+
+  .gpt-loading-text {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .sparkline-section {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .sparkline-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+  }
+
+  .sparkline-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+
+  .sparkline-hint {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+  }
+
+  .sparkline-canvas {
+    width: 100%;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
   }
 
   @media (max-width: 600px) {

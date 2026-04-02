@@ -19,7 +19,8 @@
   function getColorScale(acts) {
     let maxVal = 0.5;
     for (let i = 0; i < acts.length; i++) {
-      if (acts[i] > maxVal) maxVal = acts[i];
+      const a = Math.abs(acts[i]);
+      if (a > maxVal) maxVal = a;
     }
     return d3.scaleSequential(d3.interpolateYlOrRd).domain([0, maxVal]);
   }
@@ -45,8 +46,8 @@
 
     svg.selectAll('rect')
       .data(Array.from(activations))
-      .attr('fill', v => (v > 1e-6 ? colorScale(v) : 'rgba(255,255,255,0.03)'))
-      .attr('opacity', v => (v > 1e-6 ? 1 : 0.4));
+      .attr('fill', v => (Math.abs(v) > 1e-6 ? colorScale(Math.abs(v)) : 'rgba(255,255,255,0.03)'))
+      .attr('opacity', v => (Math.abs(v) > 1e-6 ? 1 : 0.4));
   }
 
   onMount(renderGrid);
@@ -70,7 +71,7 @@
 
     if (idx >= 0 && idx < activations.length) {
       const val = activations[idx];
-      tooltipText = `#${idx} — ${val > 1e-6 ? val.toFixed(4) : 'inactive'}`;
+      tooltipText = `#${idx} — ${Math.abs(val) > 1e-6 ? val.toFixed(4) : 'inactive'}`;
       tooltipX = e.clientX;
       tooltipY = e.clientY;
       showTooltip = true;

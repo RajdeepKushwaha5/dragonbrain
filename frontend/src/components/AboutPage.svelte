@@ -147,6 +147,13 @@
         <h3>Linear Attention</h3>
         <p>No softmax. Uses RoPE rotation with a causal mask. Q=K=x (same vector!), making attention a <strong>self-correlation</strong> readout.</p>
       </div>
+      <div class="pillar-card" style="border-color: rgba(168, 85, 247, 0.25); --pillar-accent: #a855f7;">
+        <div class="pillar-icon" style="color: #a855f7;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="8" height="10" rx="1"/><rect x="14" y="7" width="8" height="10" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        </div>
+        <h3>Composable Merging</h3>
+        <p>BDH's scale-free architecture enables <strong>concatenating independently trained models</strong>. A French translator + Spanish translator, merged into one multilingual model — no retraining. This composability is architecturally native (Section 7.1 of the paper).</p>
+      </div>
     </div>
   </section>
 

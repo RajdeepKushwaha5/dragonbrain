@@ -9,6 +9,7 @@
 
   export let sigmaFlat = null;  // Float32Array(N*N) for current layer/head
   export let tokenCount = 0;
+  export let sigmaDelta = null; // { norm, maxVal, changedCells }
 
   let svgEl;
   const SIZE = 64;
@@ -175,6 +176,22 @@
       </span>
     {/each}
   </div>
+
+  {#if sigmaDelta && sigmaDelta.changedCells > 0}
+    <div class="delta-bar">
+      <span class="delta-icon" aria-hidden="true">⚡</span>
+      <span class="delta-text">
+        Δσ: <strong>{sigmaDelta.changedCells}</strong> synapses strengthened
+        <span class="delta-stat">(max Δ = {sigmaDelta.maxVal.toFixed(4)})</span>
+      </span>
+      <div class="delta-indicator">
+        <div
+          class="delta-fill"
+          style="width: {Math.min(100, sigmaDelta.changedCells / 10)}%"
+        ></div>
+      </div>
+    </div>
+  {/if}
 
   <p class="footnote">
     The 64×64 heatmap shows the top hub neurons from σ ∈ ℝ<sup>N×N</sup>.
@@ -368,6 +385,52 @@
     border: 1px solid var(--border-default);
     white-space: nowrap;
     box-shadow: var(--shadow-elevated);
+  }
+
+  .delta-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    background: rgba(250, 204, 21, 0.04);
+    border: 1px solid rgba(250, 204, 21, 0.15);
+    border-radius: var(--radius-sm);
+    flex-wrap: wrap;
+  }
+
+  .delta-icon { font-size: 0.75rem; }
+
+  .delta-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .delta-text strong {
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .delta-stat {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+
+  .delta-indicator {
+    flex: 1;
+    min-width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .delta-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.15s ease;
   }
 
   @media (max-width: 600px) {

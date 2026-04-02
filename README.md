@@ -1,16 +1,32 @@
 # 🐉 Dragon Brain
 
-**Interactive explorer of the Baby Dragon Hatchling (BDH) architecture — a post-transformer neural network inspired by neuroscience.**
+**Interactive explorer of the Baby Dragon Hatchling (BDH) architecture — a post-transformer neural network that learns during inference, uses fixed-size memory, and organizes into interpretable brain-like graphs.**
 
-Built for the **IIT Ropar × Pathway — Beyond Transformers Hackathon**
+Built for the **IIT Ropar × Pathway — Beyond Transformers Hackathon** (Path A: Visualization & Inner Worlds)
 
-> Type text → watch sparse neurons fire → see graphs emerge → observe Hebbian memory build — all in real time, entirely in your browser.
+> Type text → watch sparse neurons fire → see graphs self-organize → observe Hebbian memory strengthen → compare against a real GPT transformer — all in real time, entirely in your browser.
 
 ---
 
 ## Live Demo
 
 👉 **[dragonbrain.vercel.app](https://dragonbrain.vercel.app/)**
+
+---
+
+## What Insight This Reveals About BDH
+
+Dragon Brain makes **five architectural breakthroughs** viscerally visible:
+
+1. **Sparsity is real and dramatic.** BDH fires ~5–15% of neurons per token while a real GPT transformer (trained on the same data, running side-by-side in the same browser) fires ~97–100%. This isn't a simulated comparison — both models run live ONNX inference on every keystroke.
+
+2. **Memory stays constant.** BDH's Hebbian σ matrix is 4 MB regardless of how many tokens you process. The KV-cache of an equivalent transformer grows by 1 KB per token. The Memory Scaling panel charts this divergence in real time with a crossover marker at T≈4,096.
+
+3. **The brain builds itself.** Toggle the Evolution view in the Graph panel to see the network before training (random noise, no hubs, max degree 93) vs after training (scale-free graph, hub neurons, max degree 208). No one programmed this structure — it emerged.
+
+4. **Synapses are interpretable.** Hover over coloured borders on the Hebbian heatmap to see what each synapse encodes (currency, punctuation, proper nouns). These aren't post-hoc probes — they're direct σ matrix entries that reliably activate for specific concepts.
+
+5. **The model learns as you type.** Watch the Δσ indicator on the Hebbian panel — it reports how many synapses strengthened with each keystroke. The sparsity sparkline tracks the model's "surprise" over time: novel text activates more neurons, predictable text activates fewer — an uncertainty signal baked into the architecture.
 
 ---
 
@@ -26,38 +42,56 @@ The **Baby Dragon Hatchling** (Kosowski et al. 2025) is a novel neural architect
 | Interpretability | Requires SAE probing (post-hoc) | Natively monosemantic neurons |
 | Attention | Softmax O(T²d), separate Q/K/V | Linear + RoPE, Q=K=x, O(T) recurrent |
 | Parameters | Per-layer weights | Shared encoder/decoder across all layers |
+| Merging | Requires fine-tuning tricks | Concatenate independently trained models |
 | Tokenization | BPE (32k–128k vocab) | Byte-level (256 vocab) |
 
 **Paper:** Kosowski et al. 2025 — [arXiv:2509.26507](https://arxiv.org/abs/2509.26507)
 
 ---
 
+## BDH Key Differentiators Demonstrated
+
+| # | Capability | How We Demonstrate It |
+|---|---|---|
+| 1 | **Constant-size memory** | Memory Scaling panel: σ flat at 4MB vs KV-cache growing at 1KB/token |
+| 2 | **Native sparsity** | Real GPT ONNX model runs side-by-side — ~97% density vs BDH's ~5–15% |
+| 3 | **Monosemantic synapses** | Concept-labeled synapse borders on the Hebbian heatmap (currency, nouns, punctuation) |
+| 4 | **Inference-time learning** | Δσ indicator + sparsity sparkline showing live Hebbian updates per keystroke |
+| 5 | **Composable merging** | Explained in the About page (Section 7.1 of the paper — requires separate training) |
+
+---
+
 ## Features
 
-### 4 Interactive Visualization Panels
+### 5 Interactive Visualization Panels
 
-**Sparse Activation Panel** — Side-by-side 32×32 neuron grids comparing BDH's sparse activations vs a transformer's dense pattern. Real-time sparsity percentage and active neuron count.
+**Sparse Activation Panel** — Side-by-side neuron grids: BDH (32×32, ~1024 neurons, sparse ReLU) vs a real GPT transformer (16×16, 256 neurons, dense GELU). Both models run live ONNX inference on the same input. Sparsity sparkline tracks activation density over the last 60 keystrokes. Insight badges explain what the sparsity level means.
 
-**Emergent Graph Panel** — Force-directed D3.js graph of the model's internal wiring:
+**Emergent Graph Panel** — D3.js force-directed graph of the model's internal wiring:
 - **Gx (Thought Flow)** — `Encoder @ Decoder_x` — feedforward causal circuit
 - **Gy (Memory Echo)** — `Decoder_y^T @ Decoder_x` — Hebbian memory readout graph
-- 80 hub neurons extracted from trained weights, self-loops filtered. Active neurons highlight yellow in real time. Zoom & drag supported.
+- **Evolution toggle** — switch between random initialization (untrained) and trained state to see hub emergence
+- 80 hub neurons, active ones highlight yellow in real time. Zoom & drag supported.
 
-**Hebbian Memory (σ) Panel** — 64×64 heatmap of the co-activation matrix with viridis color scale. Synapse labels identify concept-specific neuron pairs (currency, proper nouns, punctuation). Clear and rebuild to watch memory form from scratch.
+**Hebbian Memory (σ) Panel** — 64×64 heatmap of the co-activation matrix with viridis color scale. Synapse concept labels on hover. **Δσ indicator** shows how many synapses strengthened per token and the max change magnitude. Clear and rebuild to watch memory form from scratch.
 
-**Attention Pattern Panel** — Token×Token heatmap of raw causal attention scores (no softmax). Switch between heads to compare attention behaviors. Strictly lower-triangular due to causal mask.
+**Memory Scaling Panel** — SVG chart comparing BDH's constant σ memory (flat blue line at 4 MB) against a GPT KV-cache (red diagonal growing at 1 KB/token). Crossover marker at T≈4,096 tokens. Current position updates with each keystroke.
+
+**Attention Pattern Panel** — T×T causal attention heatmap of raw dot products (no softmax). Switch between heads. Strictly lower-triangular (causal mask).
 
 ### Additional Features
 
-- **Next-token predictions** — top-5 predicted next bytes with probabilities shown after each keystroke
-- **Inference timer** — per-token latency displayed in milliseconds
-- **Quick Guide** — overlay guide accessible from the header explaining how to use each panel
-- **About page** — deep-dive into BDH architecture with formulas, math, and comparisons
-- **Byte-level tokenization** — every character is a token (0–255), visible as a token stream
-- **Layer & head switching** — L1/L2 and H1/H2 buttons to explore different model components
-- **Insight badges** — contextual explanations that appear based on data patterns
-- **Fully client-side** — zero server calls, runs entirely via ONNX Runtime WebAssembly
-- **Mock mode** — works without a trained model, generating realistic sparse patterns for development
+- **Real GPT comparison** — a separately trained GPT transformer runs in the same browser via ONNX
+- **Next-token predictions** — top-5 predicted next bytes with probabilities
+- **Inference timer** — per-token latency in milliseconds
+- **Sparsity-as-uncertainty sparkline** — novel insight: BDH activation density correlates with input novelty (Section 6.4)
+- **Graph evolution** — random init vs trained topology with stats (max degree, avg degree, edge count)
+- **Quick Guide** — overlay tutorial accessible from header
+- **About page** — deep-dive with formulas, all 5 BDH pillars, architecture step-by-step
+- **Layer & head switching** — L1/L2, H1/H2 exploration
+- **Fully client-side** — zero server calls, ONNX Runtime WebAssembly
+- **Byte-level tokenization** — every character visible (0–255)
+- **Responsive design** — works on desktop and tablet
 
 ---
 
@@ -95,47 +129,50 @@ Input v* (D=64) → Decoder_x → ReLU → x (sparse, N=512/head)
 dragonbrain/
 ├── frontend/                  # Svelte + Vite + D3.js (deployable)
 │   ├── src/
-│   │   ├── App.svelte         # Root layout, routing, guide overlay, header/footer
+│   │   ├── App.svelte         # Root: dual-model loading, inference pipeline, layout
 │   │   ├── app.css            # Design system (true black/white theme)
 │   │   ├── main.js            # Entry point
 │   │   ├── lib/
-│   │   │   ├── BDHModel.js          # ONNX inference + logits extraction + mock fallback
+│   │   │   ├── BDHModel.js          # BDH ONNX inference + Hebbian σ management
+│   │   │   ├── GPTModel.js          # GPT ONNX inference (shared ort runtime)
 │   │   │   ├── tokenizer.js         # Byte-level tokenizer (UTF-8)
-│   │   │   ├── stores.js            # Svelte stores + derived computations
+│   │   │   ├── stores.js            # Svelte stores (BDH + GPT + derived)
 │   │   │   └── activation_math.js   # Sparsity/activation utilities
 │   │   ├── components/
-│   │   │   ├── AboutPage.svelte     # Comprehensive project explainer
-│   │   │   ├── TokenInput.svelte    # Text input with token visualization
-│   │   │   ├── LayerSelector.svelte # L1/L2/H1/H2 buttons + stats
-│   │   │   ├── SparsePanel.svelte   # BDH vs Transformer comparison
-│   │   │   ├── NeuronGrid.svelte    # 32×32 neuron activation grid
-│   │   │   ├── GraphBrain.svelte    # D3 force-directed graph (Gx/Gy)
-│   │   │   ├── HebbianHeatmap.svelte # σ matrix heatmap with tooltips
+│   │   │   ├── AboutPage.svelte     # 10-section interactive architecture guide
+│   │   │   ├── SparsePanel.svelte   # BDH vs GPT real comparison + sparkline
+│   │   │   ├── GraphBrain.svelte    # Force graph + evolution toggle
+│   │   │   ├── HebbianHeatmap.svelte # σ heatmap + Δσ indicator
+│   │   │   ├── MemoryPanel.svelte   # σ vs KV-cache scaling chart
 │   │   │   ├── AttentionPanel.svelte # Causal attention heatmap
+│   │   │   ├── NeuronGrid.svelte    # Reusable activation grid (any size)
+│   │   │   ├── TokenInput.svelte    # Text input with token stream
+│   │   │   ├── LayerSelector.svelte # L1/L2/H1/H2 + stats
 │   │   │   ├── InsightBadge.svelte  # Contextual insight messages
 │   │   │   └── StatsBar.svelte      # Progress bar component
 │   │   └── data/
-│   │       ├── graph_topology.json  # Pre-extracted Gx/Gy graph data
+│   │       ├── graph_topology.json  # Pre-extracted Gx/Gy (80 hubs)
+│   │       ├── graph_evolution.json # Random init vs trained snapshots
 │   │       └── synapse_labels.json  # Concept-specific synapse labels
 │   ├── public/
-│   │   ├── model.onnx             # Trained ONNX model (~10 KB)
-│   │   ├── model.onnx.data        # Model weights (~0.9 MB)
-│   │   └── .nojekyll              # GitHub Pages compatibility
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   └── svelte.config.js
+│   │   ├── model.onnx + .data       # Trained BDH weights (~0.9 MB)
+│   │   ├── transformer.onnx + .data # Trained GPT weights (~0.9 MB)
+│   │   └── .nojekyll
+│   └── package.json
 │
 ├── model/                     # Python — training & export (offline only)
 │   ├── bdh_tiny.py            # BDH model definition (~229K params)
-│   ├── train_tiny.py          # Training on Tiny Shakespeare
+│   ├── gpt_tiny.py            # GPT baseline definition (~148K params)
+│   ├── train_tiny.py          # BDH training on Tiny Shakespeare
+│   ├── train_gpt_tiny.py      # GPT training (matched hyperparams)
 │   ├── extract.py             # Gx/Gy graph topology extraction
-│   ├── export_onnx.py         # ONNX export for browser inference
+│   ├── extract_evolution.py   # Graph evolution snapshots
+│   ├── export_onnx.py         # BDH ONNX export
+│   ├── export_gpt_onnx.py     # GPT ONNX export
 │   ├── identify_synapses.py   # Concept-specific synapse identification
-│   ├── generate_mock_data.py  # Mock data generation for frontend dev
 │   └── requirements.txt
 │
-├── vercel.json                # Vercel deployment config (COOP/COEP headers)
+├── vercel.json                # Vercel config (COOP/COEP + SPA rewrites)
 └── README.md
 ```
 
@@ -143,7 +180,7 @@ dragonbrain/
 
 ## Quick Start
 
-### Frontend (runs immediately with mock data)
+### Frontend
 
 ```bash
 cd frontend
@@ -151,20 +188,29 @@ npm install
 npm run dev
 ```
 
-Opens at `http://localhost:5173`. The app runs in **mock mode** if no ONNX model is present — generating realistic sparse activation patterns. All 4 panels work immediately.
+Opens at `http://localhost:5173`. The app runs in **mock mode** if no ONNX model is present.
 
-### Training the Model (optional)
+### Training Both Models
 
 ```bash
 cd model
 pip install -r requirements.txt
-python train_tiny.py              # Train on Tiny Shakespeare (~5000 iters)
-python extract.py                 # Extract Gx/Gy graph topologies
-python identify_synapses.py       # Find concept-specific synapses
-python export_onnx.py --output ../frontend/public/model.onnx
-```
 
-After training, rebuild the frontend — real ONNX inference replaces mock mode automatically.
+# Train BDH
+python train_tiny.py              # ~5000 iters, best val loss 1.5311
+
+# Train GPT baseline (same data, same hyperparams)
+python train_gpt_tiny.py          # ~5000 iters, val loss ~1.648
+
+# Export both to ONNX
+python export_onnx.py --output ../frontend/public/model.onnx
+python export_gpt_onnx.py
+
+# Extract graph data
+python extract.py
+python extract_evolution.py
+python identify_synapses.py
+```
 
 ### Production Build
 
@@ -180,27 +226,11 @@ npm run preview     # Preview locally
 
 ### Vercel (Recommended)
 
-The repo includes a [`vercel.json`](vercel.json) that handles everything automatically:
-
 1. Push to GitHub
-2. Import the repo on [vercel.com](https://vercel.com)
-3. Leave **Root Directory** blank (the `vercel.json` at repo root handles build commands)
-4. Deploy
+2. Import on [vercel.com](https://vercel.com) — leave Root Directory blank
+3. Deploy
 
-The `vercel.json` configures:
-- **Build:** `cd frontend && npm run build`
-- **Output:** `frontend/dist`
-- **COOP/COEP headers** for ONNX Runtime WASM threading
-- **SPA rewrites** for client-side routing
-
-> **Note:** The Python files in `model/` are **not needed at runtime**. The entire app is a static site served from `frontend/dist/`.
-
-### GitHub Pages
-
-```bash
-cd frontend
-npm run deploy    # Uses gh-pages to publish dist/
-```
+The `vercel.json` configures build commands, COOP/COEP headers (required for ONNX WASM threading), and SPA rewrites.
 
 ---
 
@@ -208,17 +238,18 @@ npm run deploy    # Uses gh-pages to publish dist/
 
 | Layer | Technology |
 |---|---|
-| Model | PyTorch (BDH, ~229K params) |
-| Inference | ONNX Runtime Web (WASM) |
+| Models | PyTorch (BDH ~229K params, GPT ~148K params) |
+| Inference | ONNX Runtime Web (WASM backend) |
 | Frontend | Svelte 4.2, Vite 5.4 |
-| Visualization | D3.js v7.9 (force graphs, heatmaps) |
-| Design | Custom CSS design system (Inter + Orbitron + JetBrains Mono) |
-| Theme | True black (#000) + white text + blue accent palette |
-| Deployment | Vercel (static, with COOP/COEP headers) |
+| Visualization | D3.js v7.9 (force graphs, heatmaps, grids) |
+| Design | Custom CSS (Inter + Orbitron + JetBrains Mono) |
+| Deployment | Vercel (static, COOP/COEP headers) |
 
 ---
 
 ## Model Configuration
+
+### BDH (Primary)
 
 | Parameter | Value |
 |---|---|
@@ -230,31 +261,63 @@ npm run deploy    # Uses gh-pages to publish dist/
 | MLP multiplier | 16× |
 | Vocab size | 256 (byte-level) |
 | Total parameters | ~229K |
-| Training data | Tiny Shakespeare |
 | Best val loss | 1.5311 (iter 4750) |
-| Runtime | ONNX + WebAssembly |
-| Max sequence | 256 tokens |
+
+### GPT Baseline (Comparison)
+
+| Parameter | Value |
+|---|---|
+| Layers | 2 |
+| Embedding dim (D) | 64 |
+| Heads (n_h) | 2 |
+| MLP hidden dim | 256 (4× D) |
+| Activation | GELU (~97–100% density) |
+| Vocab size | 256 (byte-level) |
+| Total parameters | ~148K |
+| Val loss | ~1.648 (iter 4999) |
 
 ---
 
 ## How It Works
 
-1. **Type text** in the input box — each character becomes a byte token (0–255)
-2. **Panels update instantly** — sparse activations, graph highlights, Hebbian memory, and attention patterns all respond to each keystroke
-3. **Switch layers/heads** — use L1/L2 and H1/H2 to explore different model components; different heads specialise in different patterns
-4. **Explore the graph** — toggle Gx (Thought Flow) / Gy (Memory Echo), drag and zoom to inspect hub neurons
-5. **Clear memory** — reset the Hebbian σ matrix, then retype to watch memory rebuild from scratch
+1. **Type text** — each character becomes a byte token (0–255)
+2. **Both models run** — BDH and GPT process the same tokens via ONNX in parallel
+3. **5 panels update** — sparse grids, graph highlights, Hebbian heatmap, memory chart, attention
+4. **Switch layers/heads** — L1/L2 and H1/H2 show different model internals
+5. **Watch the graph evolve** — toggle Evolution to compare random init vs trained topology
+6. **Clear memory** — reset σ, then retype to watch Hebbian memory rebuild in real time
+
+---
+
+## Limitations & Future Scope
+
+### Current Limitations
+
+- **Model scale:** 229K parameters is too small for BDH to fully exhibit paper-scale properties (the paper uses models with millions of parameters). Sparsity is ~5–15% rather than the reported ~5%.
+- **Memory chart is theoretical:** The Memory Scaling panel computes σ size and KV-cache growth from known constants — it doesn't measure actual GPU/browser memory usage.
+- **Composable merging is explained, not demonstrated:** True model merging requires separately training two domain-specific models and concatenating them. This is documented in the About page but not implemented as a live demo.
+- **No long-context demo:** The model's block size is 256 tokens. Demonstrating BDH's infinite context advantage requires larger models and longer sequences.
+- **Byte-level tokenizer:** Limits the vocabulary to 256 characters, making the text generation less meaningful than BPE-tokenized models.
+
+### Future Scope
+
+- **Scale up:** Train larger BDH models (1M+ params) to show true 5% sparsity
+- **Long-context demo:** Implement recurrent inference mode to process sequences beyond block size
+- **Composable merging demo:** Train two domain-specific models, merge them live, show combined capabilities
+- **3D visualization:** Three.js walkthrough of the full computation graph
+- **Memory profiling:** Measure actual WASM memory usage to validate the σ vs KV-cache comparison empirically
 
 ---
 
 ## References
 
-- Kosowski et al. 2025, *"The Dragon Hatchling"* — [arXiv:2509.26507](https://arxiv.org/abs/2509.26507)
+- Kosowski et al. 2025, *"The Dragon Hatchling: The Missing Link between the Transformer and Models of the Brain"* — [arXiv:2509.26507](https://arxiv.org/abs/2509.26507)
 - Official BDH repository — [github.com/pathwaycom/bdh](https://github.com/pathwaycom/bdh)
 - Pathway — [pathway.com](https://pathway.com)
+- Transformer Explainer (Georgia Tech) — [poloclub.github.io/transformer-explainer](https://poloclub.github.io/transformer-explainer) (inspiration)
 
 ---
 
 ## Author
 
-**[Rajdeep Singh](https://rajdeep-singh.vercel.app/)** — Built for the Beyond Transformers Hackathon (Pathway A)
+**[Rajdeep Singh](https://rajdeep-singh.vercel.app/)** — Built for the Beyond Transformers Hackathon (Path A: Visualization & Inner Worlds)

@@ -94,3 +94,48 @@ export const attentionScores = derived(
     };
   }
 );
+
+// ── GPT (Transformer) comparison stores ──
+
+/** Whether the GPT model is loaded and ready */
+export const gptReady = writable(false);
+
+/** Last GPT inference result { activations: { 0: Float32Array, 1: Float32Array }, T } */
+export const gptData = writable(null);
+
+/**
+ * Derived: flat GPT MLP activation array for the selected layer.
+ * GPT has 256 neurons (D=64 × mlp_ratio=4) with ~97% density (GELU).
+ */
+export const gptActivations = derived(
+  [gptData, selectedLayer],
+  ([$data, $layer]) => {
+    if (!$data || !$data.activations || !$data.activations[$layer]) return null;
+    return $data.activations[$layer];
+  }
+);
+
+/**
+ * Derived: GPT activation density stats.
+ * Uses Math.abs since GELU can produce small negative values.
+ */
+export const gptSparsityStats = derived(gptActivations, ($acts) => {
+  if (!$acts) return { active: 0, total: 0, pct: '0.0' };
+  let count = 0;
+  for (let i = 0; i < $acts.length; i++) {
+    if (Math.abs($acts[i]) > 1e-6) count++;
+  }
+  return {
+    active: count,
+    total: $acts.length,
+    pct: ((count / $acts.length) * 100).toFixed(1),
+  };
+});
+
+// ── Memory scaling stores ──
+
+/** Rolling sparsity history for sparkline visualization */
+export const sparsityHistory = writable([]);
+
+/** Sigma delta from the last token (for inference-time learning visualization) */
+export const sigmaDelta = writable(null);

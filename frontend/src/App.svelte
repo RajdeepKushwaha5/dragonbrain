@@ -1,11 +1,13 @@
 <script>
   import { onMount } from 'svelte';
   import { BDHModel } from './lib/BDHModel.js';
+  import { GPTModel } from './lib/GPTModel.js';
   import { tokenize, tokenToChar } from './lib/tokenizer.js';
   import {
     inputText, tokenBuffer, inferenceData, sigmaData,
     modelReady, flatActivations, activeNeuronIds,
     selectedLayer, selectedHead, tokenCount, inferring,
+    gptReady, gptData, sparsityHistory, sigmaDelta,
   } from './lib/stores.js';
 
   import TokenInput from './components/TokenInput.svelte';
@@ -14,11 +16,14 @@
   import GraphBrain from './components/GraphBrain.svelte';
   import HebbianHeatmap from './components/HebbianHeatmap.svelte';
   import AttentionPanel from './components/AttentionPanel.svelte';
+  import MemoryPanel from './components/MemoryPanel.svelte';
   import AboutPage from './components/AboutPage.svelte';
 
   const model = new BDHModel();
+  const gptModel = new GPTModel();
 
   let sigmaFlat = null;
+  let sigmaDeltaLocal = null;
   let totalTokens = 0;
   let currentPage = 'visualizer';
   let inferenceMs = 0;
@@ -29,6 +34,12 @@
   onMount(async () => {
     await model.load('./model.onnx');
     modelReady.set(true);
+
+    // Load GPT model using shared ort runtime
+    if (model._ort) {
+      await gptModel.load('./transformer.onnx', model._ort);
+      gptReady.set(gptModel.ready);
+    }
   });
 
   let inferenceSeq = 0;
@@ -37,7 +48,9 @@
     const { tokens } = event.detail;
     if (!tokens || tokens.length === 0) {
       inferenceData.set(null);
+      gptData.set(null);
       sigmaFlat = null;
+      sigmaDeltaLocal = null;
       lastLogits = null;
       topPredictions = [];
       return;
@@ -48,16 +61,20 @@
     inferring.set(true);
 
     try {
+      // Run BDH inference
       const t0 = performance.now();
       const result = await model.runToken(tokens);
       const t1 = performance.now();
-      if (seq !== inferenceSeq) return; // stale result from earlier keystroke
+      if (seq !== inferenceSeq) return;
 
       inferenceMs = Math.round(t1 - t0);
       inferenceData.set(result);
 
       lastLogits = result.logits || null;
       topPredictions = model.topKPredictions(lastLogits, 5);
+
+      // Snapshot σ before update for delta tracking
+      const prevSigma = model.getSigma($selectedLayer, $selectedHead).slice();
 
       const layer = result.layers[0];
       model.updateSigma(layer.x_last, layer.y_last, 0);
@@ -69,9 +86,45 @@
       totalTokens++;
       tokenCount.set(totalTokens);
 
-      // .slice() creates a new reference so Svelte detects the change
       sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
       sigmaData.set({ ...model.sigma });
+
+      // Compute σ delta for inference-time learning visualization
+      let deltaMax = 0;
+      let deltaChanged = 0;
+      for (let i = 0; i < sigmaFlat.length; i++) {
+        const d = Math.abs(sigmaFlat[i] - prevSigma[i]);
+        if (d > 1e-8) {
+          deltaChanged++;
+          if (d > deltaMax) deltaMax = d;
+        }
+      }
+      sigmaDeltaLocal = { norm: 0, maxVal: deltaMax, changedCells: deltaChanged };
+      sigmaDelta.set(sigmaDeltaLocal);
+
+      // Track sparsity over time for sparkline
+      const actCount = result.layers[$selectedLayer]
+        ? result.layers[$selectedLayer].x_last.reduce(
+            (sum, head) => sum + head.filter(v => v > 1e-6).length, 0
+          )
+        : 0;
+      const actTotal = result.layers[$selectedLayer]
+        ? result.layers[$selectedLayer].x_last.reduce((sum, head) => sum + head.length, 0)
+        : 1;
+      const pct = (actCount / actTotal) * 100;
+      sparsityHistory.update(h => [...h.slice(-59), { pct }]);
+
+      // Run GPT inference (non-blocking relative to BDH)
+      if (gptModel.ready) {
+        try {
+          const gptResult = await gptModel.runToken(tokens);
+          if (seq === inferenceSeq) {
+            gptData.set(gptResult);
+          }
+        } catch (err) {
+          console.warn('GPT inference error:', err);
+        }
+      }
     } catch (err) {
       console.error('Inference error:', err);
     } finally {
@@ -84,8 +137,12 @@
     totalTokens = 0;
     tokenCount.set(0);
     sigmaFlat = null;
+    sigmaDeltaLocal = null;
     sigmaData.set(null);
+    sigmaDelta.set(null);
     inferenceData.set(null);
+    gptData.set(null);
+    sparsityHistory.set([]);
     lastLogits = null;
     topPredictions = [];
   }
@@ -191,9 +248,14 @@
         <HebbianHeatmap
           sigmaFlat={sigmaFlat}
           tokenCount={totalTokens}
+          sigmaDelta={sigmaDeltaLocal}
           on:clear={handleClearMemory}
         />
         <AttentionPanel />
+      </div>
+
+      <div class="panel-row insights-row">
+        <MemoryPanel />
       </div>
     </section>
   {/if}
@@ -540,6 +602,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.2rem;
+  }
+
+  .insights-row {
+    grid-template-columns: 1fr;
   }
 
   /* ── Footer ── */

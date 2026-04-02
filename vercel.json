@@ -13,6 +13,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/((?!assets|model\\.onnx|model\\.onnx\\.data).*)", "destination": "/index.html" }
+    { "source": "/((?!assets|model\\.onnx|model\\.onnx\\.data|transformer\\.onnx|transformer\\.onnx\\.data).*)", "destination": "/index.html" }
   ]
 }

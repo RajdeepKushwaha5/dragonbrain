@@ -23,6 +23,7 @@ export class BDHModel {
     this.nLayers = 2;
     this.mockMode = false;
     this.ready = false;
+    this._ort = null;            // cached onnxruntime-web module
   }
 
   /**
@@ -31,7 +32,8 @@ export class BDHModel {
    */
   async load(modelPath) {
     try {
-      const ort = await import('onnxruntime-web');
+      this._ort = await import('onnxruntime-web');
+      const ort = this._ort;
 
       // Configure WASM backend
       ort.env.wasm.numThreads = 1;
@@ -60,7 +62,7 @@ export class BDHModel {
   async runToken(tokenBuffer) {
     if (this.mockMode) return this._mockInference(tokenBuffer);
 
-    const ort = await import('onnxruntime-web');
+    const ort = this._ort;
     const T = tokenBuffer.length;
     const tokens = new ort.Tensor(
       'int64',

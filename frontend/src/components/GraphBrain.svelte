@@ -1,13 +1,20 @@
 <script>
   import * as d3 from 'd3';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import graphData from '../data/graph_topology.json';
+  import evolutionData from '../data/graph_evolution.json';
 
   export let activeNeuronIds = new Set();
 
   let container;
   let simulation = null;
   let graphMode = 'gx';
+
+  // Evolution toggle
+  let showEvolution = false;
+  let snapshotIdx = evolutionData.snapshots.length - 1; // default to trained
+  $: snapshot = evolutionData.snapshots[snapshotIdx];
+  $: evoStats = snapshot ? snapshot.stats : null;
 
   function cloneGraph(g) {
     return {
@@ -19,10 +26,32 @@
 
   let currentData = cloneGraph(graphData.gx);
 
+  function getActiveSource() {
+    return showEvolution ? snapshot : graphData;
+  }
+
   function switchMode(mode) {
     if (mode === graphMode) return;
     graphMode = mode;
-    currentData = cloneGraph(graphData[mode]);
+    const src = getActiveSource();
+    currentData = cloneGraph(src[mode]);
+    rebuildGraph();
+  }
+
+  function toggleEvolution() {
+    showEvolution = !showEvolution;
+    if (showEvolution) {
+      snapshotIdx = evolutionData.snapshots.length - 1;
+    }
+    const src = getActiveSource();
+    currentData = cloneGraph(src[graphMode]);
+    rebuildGraph();
+  }
+
+  function switchSnapshot(idx) {
+    snapshotIdx = idx;
+    const src = evolutionData.snapshots[idx];
+    currentData = cloneGraph(src[graphMode]);
     rebuildGraph();
   }
 
@@ -122,6 +151,10 @@
     if (container) buildGraph(d3.select(container), currentData);
   });
 
+  onDestroy(() => {
+    if (simulation) simulation.stop();
+  });
+
   $: if (container && currentData) {
     d3.select(container).selectAll('circle.node')
       .attr('fill', d => {
@@ -176,8 +209,33 @@
         Memory Echo (Gy)
       </button>
     </div>
-    <span class="node-count">{currentData.nodes.length} hubs · {currentData.links.length} edges</span>
+    <div class="mode-right">
+      <button class="evo-btn" class:active={showEvolution} on:click={toggleEvolution}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Evolution
+      </button>
+      <span class="node-count">{currentData.nodes.length} hubs · {currentData.links.length} edges</span>
+    </div>
   </div>
+
+  {#if showEvolution}
+    <div class="evo-bar">
+      {#each evolutionData.snapshots as snap, idx}
+        <button
+          class="snap-btn"
+          class:active={snapshotIdx === idx}
+          on:click={() => switchSnapshot(idx)}
+        >
+          {snap.label}
+        </button>
+      {/each}
+      {#if evoStats}
+        <span class="evo-stats">
+          max°{evoStats.max_degree} · avg°{evoStats.avg_degree} · {evoStats.gx_edges} edges
+        </span>
+      {/if}
+    </div>
+  {/if}
 
   <div class="graph-container">
     <svg bind:this={container} class="graph-svg" role="img" aria-label="Emergent graph topology"></svg>
@@ -199,8 +257,14 @@
   </div>
 
   <p class="footnote">
-    This structure <strong>self-organized from random weights</strong> during training.
-    Hub neurons act as real organizational centres — the graph is scale-free (Section 5 of the paper).
+    {#if showEvolution && snapshotIdx === 0}
+      <strong>Random initialization</strong> — weights are untrained noise. No hub structure has formed yet.
+      Toggle to "Trained" to see the scale-free graph emerge.
+    {:else}
+      This structure <strong>self-organized from random weights</strong> during training.
+      Hub neurons act as real organizational centres — the graph is scale-free (Section 5 of the paper).
+      {#if !showEvolution}Click <em>Evolution</em> to compare with random init.{/if}
+    {/if}
     <span class="formula">{modeInfo[graphMode].formula}</span>
   </p>
 </div>
@@ -262,6 +326,61 @@
     border-radius: var(--radius-sm);
     padding: 2px;
     gap: 2px;
+  }
+
+  .mode-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .evo-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.55rem;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .evo-btn:hover { color: var(--text-secondary); border-color: var(--border-hover); }
+  .evo-btn.active { background: rgba(250, 204, 21, 0.1); border-color: var(--gold); color: var(--gold); }
+
+  .evo-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .snap-btn {
+    padding: 0.2rem 0.6rem;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .snap-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+  .snap-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+
+  .evo-stats {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    margin-left: auto;
   }
 
   .mode-btn {

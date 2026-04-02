@@ -130,7 +130,7 @@ dragonbrain/
 ├── frontend/                  # Svelte + Vite + D3.js (deployable)
 │   ├── src/
 │   │   ├── App.svelte         # Root: dual-model loading, inference pipeline, layout
-│   │   ├── app.css            # Design system (true black/white theme)
+│   │   ├── app.css            # Design system (dark theme, CSS custom properties)
 │   │   ├── main.js            # Entry point
 │   │   ├── lib/
 │   │   │   ├── BDHModel.js          # BDH ONNX inference + Hebbian σ management
@@ -242,7 +242,7 @@ The `vercel.json` configures build commands, COOP/COEP headers (required for ONN
 | Inference | ONNX Runtime Web (WASM backend) |
 | Frontend | Svelte 4.2, Vite 5.4 |
 | Visualization | D3.js v7.9 (force graphs, heatmaps, grids) |
-| Design | Custom CSS (Inter + Orbitron + JetBrains Mono) |
+| Design | Custom CSS (Inter + JetBrains Mono) |
 | Deployment | Vercel (static, COOP/COEP headers) |
 
 ---

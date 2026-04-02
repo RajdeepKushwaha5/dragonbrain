@@ -463,7 +463,7 @@
   main {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 1rem 1.5rem 2rem;
+    padding: 1.2rem 2rem 2rem;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -474,9 +474,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.8rem 0 1.2rem;
+    padding: 1rem 0 1.2rem;
     border-bottom: 1px solid var(--border-subtle);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.6rem;
     flex-wrap: wrap;
     gap: 0.8rem;
   }
@@ -484,33 +484,30 @@
   .logo-row {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 0.7rem;
   }
 
   .logo-icon {
-    font-size: 2.4rem;
+    font-size: 2rem;
     animation: float 3s ease-in-out infinite;
     line-height: 1;
   }
 
   h1 {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    font-weight: 700;
+    font-family: var(--font-sans);
+    font-size: 1.5rem;
+    font-weight: 800;
     color: var(--text-primary);
-    letter-spacing: 0.08em;
+    letter-spacing: -0.03em;
     line-height: 1.2;
-    background: linear-gradient(135deg, #ffffff 0%, #60a5fa 50%, #a78bfa 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .tagline {
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     color: var(--text-muted);
     margin: 0;
     font-weight: 400;
+    letter-spacing: -0.01em;
   }
 
   .header-right {
@@ -523,24 +520,23 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.45rem 0.9rem;
+    padding: 0.5rem 1rem;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
     font-family: var(--font-sans);
-    font-size: 0.82rem;
-    font-weight: 600;
+    font-size: 0.84rem;
+    font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-base);
-    letter-spacing: 0.01em;
+    letter-spacing: -0.01em;
   }
 
   .about-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.07);
     border-color: var(--border-hover);
     color: var(--text-primary);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.06);
     transform: translateY(-1px);
   }
 
@@ -588,7 +584,7 @@
   .teach-icon { font-size: 1.1rem; }
 
   .teach-text {
-    font-size: 0.82rem;
+    font-size: 0.86rem;
     color: var(--text-secondary);
     flex: 1;
   }
@@ -635,7 +631,7 @@
     border-radius: var(--radius-lg);
     padding: 1.5rem 1.8rem;
     z-index: 100;
-    box-shadow: 0 0 40px rgba(59, 130, 246, 0.08), 0 8px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 40px rgba(91, 141, 239, 0.08), 0 8px 32px rgba(0, 0, 0, 0.5);
     animation: slideUp 0.25s ease;
   }
 
@@ -647,8 +643,8 @@
   }
 
   .guide-title {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
+    font-family: var(--font-sans);
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--text-primary);
     display: flex;
@@ -697,9 +693,9 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
-    font-size: 0.84rem;
+    font-size: 0.88rem;
     color: var(--text-secondary);
-    line-height: 1.55;
+    line-height: 1.6;
     transition: border-color var(--transition-fast);
   }
 
@@ -750,14 +746,15 @@
   }
 
   .loading-text {
-    font-family: var(--font-display);
-    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--text-secondary);
-    letter-spacing: 0.04em;
+    letter-spacing: -0.01em;
   }
 
   .loading-sub {
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     color: var(--text-dim);
     margin-top: 0.3rem;
   }
@@ -805,9 +802,9 @@
 
   .pred-label {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: 0.76rem;
     color: var(--text-dim);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
     flex-shrink: 0;
   }
@@ -816,18 +813,18 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.2rem 0.5rem;
-    background: rgba(59, 130, 246, 0.08);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 5px;
+    padding: 0.22rem 0.55rem;
+    background: rgba(91, 141, 239, 0.08);
+    border: 1px solid rgba(91, 141, 239, 0.18);
+    border-radius: 6px;
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     transition: background var(--transition-fast);
     cursor: default;
   }
 
   .pred-token:hover {
-    background: rgba(59, 130, 246, 0.15);
+    background: rgba(91, 141, 239, 0.14);
   }
 
   .pred-char {
@@ -843,7 +840,7 @@
   }
 
   .sigma-row {
-    border-top: 1px solid rgba(250, 204, 21, 0.12);
+    border-top: 1px solid rgba(240, 194, 70, 0.12);
     padding-top: 0.3rem;
   }
 
@@ -852,12 +849,12 @@
   }
 
   .sigma-token {
-    background: rgba(250, 204, 21, 0.08) !important;
-    border-color: rgba(250, 204, 21, 0.25) !important;
+    background: rgba(240, 194, 70, 0.08) !important;
+    border-color: rgba(240, 194, 70, 0.25) !important;
   }
 
   .sigma-token:hover {
-    background: rgba(250, 204, 21, 0.15) !important;
+    background: rgba(240, 194, 70, 0.15) !important;
   }
 
   .sigma-indicator {
@@ -872,10 +869,10 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     color: var(--rose);
-    background: rgba(244, 63, 94, 0.08);
+    background: rgba(240, 98, 146, 0.08);
     padding: 0.15rem 0.4rem;
     border-radius: 999px;
-    border: 1px solid rgba(244, 63, 94, 0.2);
+    border: 1px solid rgba(240, 98, 146, 0.2);
     animation: shiftPulse 0.5s ease;
   }
 
@@ -949,7 +946,7 @@
   }
 
   .footer-credit {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
   }
 
@@ -962,7 +959,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
   }
 
   .footer-links a {
@@ -987,11 +984,11 @@
 
   @media (max-width: 768px) {
     main {
-      padding: 0.6rem 0.8rem 1.5rem;
+      padding: 0.6rem 1rem 1.5rem;
     }
 
     h1 {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
     }
 
     .logo-icon {

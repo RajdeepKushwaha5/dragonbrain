@@ -170,24 +170,25 @@
   }
 
   .panel-title {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
+    font-family: var(--font-sans);
+    font-size: 1.05rem;
+    font-weight: 700;
     color: var(--text-primary);
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.45rem;
+    letter-spacing: -0.02em;
   }
 
   .title-icon { flex-shrink: 0; opacity: 0.8; }
 
   .panel-desc {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin: 0.2rem 0 0;
-    line-height: 1.6;
-    max-width: 40ch;
+    font-size: 0.87rem;
+    color: var(--text-muted);
+    margin: 0.25rem 0 0;
+    line-height: 1.65;
+    max-width: 45ch;
   }
 
   .head-btns {
@@ -221,7 +222,7 @@
     background: var(--accent);
     color: #fff;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
   }
 
   .heatmap-container {
@@ -230,17 +231,17 @@
 
   .attn-svg {
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border-default);
     display: block;
     max-width: 100%;
   }
 
   .footnote {
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     margin: 0.6rem 0 0;
-    line-height: 1.6;
+    line-height: 1.65;
   }
 
   .footnote strong {

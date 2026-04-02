@@ -596,24 +596,24 @@
   .hero-badge {
     display: inline-block;
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: var(--accent);
     background: var(--accent-glow);
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(91, 141, 239, 0.2);
     border-radius: var(--radius-full);
     padding: 0.3rem 1rem;
     margin-bottom: 1.2rem;
   }
 
   .hero-title {
-    font-family: var(--font-display);
+    font-family: var(--font-sans);
     font-size: 2.4rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text-primary);
-    letter-spacing: 0.04em;
+    letter-spacing: -0.03em;
     line-height: 1.15;
     margin-bottom: 1rem;
   }
@@ -627,7 +627,7 @@
 
   .hero-subtitle {
     font-size: 1.05rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     line-height: 1.7;
     max-width: 540px;
     margin: 0 auto 1.2rem;
@@ -689,7 +689,7 @@
 
   .toc-label {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -704,7 +704,7 @@
   }
 
   .toc-link {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     text-decoration: none;
     padding: 0.3rem 0.65rem;
@@ -725,11 +725,11 @@
   }
 
   .section h2 {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-family: var(--font-sans);
+    font-size: 1.15rem;
+    font-weight: 700;
     color: var(--text-primary);
-    letter-spacing: 0.04em;
+    letter-spacing: -0.02em;
     margin-bottom: 1.2rem;
     padding-bottom: 0.6rem;
     border-bottom: 1px solid var(--border-subtle);
@@ -769,7 +769,7 @@
     color: var(--accent-bright);
     text-decoration: underline;
     text-underline-offset: 3px;
-    text-decoration-color: rgba(96, 165, 250, 0.3);
+    text-decoration-color: rgba(125, 168, 245, 0.3);
     transition: text-decoration-color var(--transition-fast), color var(--transition-fast);
   }
 
@@ -804,7 +804,7 @@
     gap: 0.8rem;
     padding: 1rem 1.2rem;
     background: var(--accent-glow);
-    border: 1px solid rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(91, 141, 239, 0.18);
     border-radius: var(--radius-md);
     margin: 1rem 0;
   }
@@ -816,7 +816,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(59, 130, 246, 0.12);
+    background: rgba(91, 141, 239, 0.12);
     border-radius: var(--radius-sm);
     color: var(--accent-bright);
   }
@@ -836,14 +836,14 @@
 
   .problem-card {
     padding: 1rem;
-    background: rgba(244, 63, 94, 0.04);
-    border: 1px solid rgba(244, 63, 94, 0.12);
+    background: rgba(240, 98, 146, 0.04);
+    border: 1px solid rgba(240, 98, 146, 0.12);
     border-radius: var(--radius-md);
     transition: border-color var(--transition-base);
   }
 
   .problem-card:hover {
-    border-color: rgba(244, 63, 94, 0.3);
+    border-color: rgba(240, 98, 146, 0.3);
   }
 
   .problem-icon {
@@ -857,7 +857,7 @@
   }
 
   .problem-red {
-    background: rgba(244, 63, 94, 0.1);
+    background: rgba(240, 98, 146, 0.1);
     color: var(--rose);
   }
 
@@ -940,8 +940,8 @@
     align-items: center;
     gap: 0.7rem;
     padding: 0.65rem 1rem;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: linear-gradient(135deg, rgba(91, 141, 239, 0.08) 0%, rgba(91, 141, 239, 0.03) 100%);
+    border: 1px solid rgba(91, 141, 239, 0.2);
     border-left: 3px solid var(--accent);
     border-radius: var(--radius-sm);
     margin: 0.6rem 0 0.8rem;
@@ -967,34 +967,34 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--accent);
-    background: rgba(59, 130, 246, 0.12);
+    background: rgba(91, 141, 239, 0.12);
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
     flex-shrink: 0;
   }
 
   .formula-gold {
-    background: linear-gradient(135deg, rgba(250, 204, 21, 0.08) 0%, rgba(250, 204, 21, 0.02) 100%);
-    border-color: rgba(250, 204, 21, 0.2);
+    background: linear-gradient(135deg, rgba(240, 194, 70, 0.08) 0%, rgba(240, 194, 70, 0.02) 100%);
+    border-color: rgba(240, 194, 70, 0.2);
     border-left-color: var(--gold);
   }
 
   .formula-gold code { color: #fde68a; }
   .formula-gold .formula-label {
     color: var(--gold);
-    background: rgba(250, 204, 21, 0.12);
+    background: rgba(240, 194, 70, 0.12);
   }
 
   .formula-green {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.02) 100%);
-    border-color: rgba(34, 197, 94, 0.2);
+    background: linear-gradient(135deg, rgba(61, 214, 140, 0.08) 0%, rgba(61, 214, 140, 0.02) 100%);
+    border-color: rgba(61, 214, 140, 0.2);
     border-left-color: var(--green);
   }
 
   .formula-green code { color: #86efac; }
   .formula-green .formula-label {
     color: var(--green);
-    background: rgba(34, 197, 94, 0.12);
+    background: rgba(61, 214, 140, 0.12);
   }
 
   .formula-sm {
@@ -1041,7 +1041,7 @@
     font-size: 0.88rem;
     font-weight: 700;
     border-radius: 50%;
-    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.25);
+    box-shadow: 0 2px 12px rgba(91, 141, 239, 0.25);
   }
 
   .step-content h3 {
@@ -1125,13 +1125,13 @@
   }
 
   .guide-blue { border-left-color: var(--accent); }
-  .guide-blue:hover { border-color: rgba(59, 130, 246, 0.3); border-left-color: var(--accent); }
+  .guide-blue:hover { border-color: rgba(91, 141, 239, 0.3); border-left-color: var(--accent); }
   .guide-green { border-left-color: var(--green); }
-  .guide-green:hover { border-color: rgba(34, 197, 94, 0.3); border-left-color: var(--green); }
+  .guide-green:hover { border-color: rgba(61, 214, 140, 0.3); border-left-color: var(--green); }
   .guide-gold { border-left-color: var(--gold); }
-  .guide-gold:hover { border-color: rgba(250, 204, 21, 0.3); border-left-color: var(--gold); }
+  .guide-gold:hover { border-color: rgba(240, 194, 70, 0.3); border-left-color: var(--gold); }
   .guide-rose { border-left-color: var(--rose); }
-  .guide-rose:hover { border-color: rgba(244, 63, 94, 0.3); border-left-color: var(--rose); }
+  .guide-rose:hover { border-color: rgba(240, 98, 146, 0.3); border-left-color: var(--rose); }
 
   .guide-header {
     display: flex;
@@ -1212,7 +1212,7 @@
   .config-item:hover { border-color: var(--border-hover); }
 
   .config-label {
-    font-size: 0.72rem;
+    font-size: 0.76rem;
     color: var(--text-dim);
     font-weight: 500;
   }
@@ -1246,13 +1246,13 @@
   }
 
   .concept-blue { border-left-color: var(--accent); }
-  .concept-blue:hover { border-color: rgba(59, 130, 246, 0.3); border-left-color: var(--accent); }
+  .concept-blue:hover { border-color: rgba(91, 141, 239, 0.3); border-left-color: var(--accent); }
   .concept-rose { border-left-color: var(--rose); }
-  .concept-rose:hover { border-color: rgba(244, 63, 94, 0.3); border-left-color: var(--rose); }
+  .concept-rose:hover { border-color: rgba(240, 98, 146, 0.3); border-left-color: var(--rose); }
   .concept-green { border-left-color: var(--green); }
-  .concept-green:hover { border-color: rgba(34, 197, 94, 0.3); border-left-color: var(--green); }
+  .concept-green:hover { border-color: rgba(61, 214, 140, 0.3); border-left-color: var(--green); }
   .concept-gold { border-left-color: var(--gold); }
-  .concept-gold:hover { border-color: rgba(250, 204, 21, 0.3); border-left-color: var(--gold); }
+  .concept-gold:hover { border-color: rgba(240, 194, 70, 0.3); border-left-color: var(--gold); }
 
   .concept h3 {
     font-size: 1rem;
@@ -1307,7 +1307,7 @@
     font-size: 0.75rem;
     font-weight: 700;
     border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 8px rgba(91, 141, 239, 0.2);
   }
 
   /* ── References Grid ── */
@@ -1357,10 +1357,10 @@
   }
 
   .ref-card p {
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     color: var(--text-muted);
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.45;
   }
 
   /* ── Responsive ── */

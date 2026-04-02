@@ -114,7 +114,7 @@
     background: var(--accent);
     color: #fff;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
   }
 
   .stats-row {

@@ -2,54 +2,54 @@
 
 /* ── Design Tokens ── */
 :root {
-  /* Surface — true black + dark grays */
-  --bg-root: #000000;
-  --bg-card: #0a0a0a;
-  --bg-secondary: #050505;
-  --bg-card-hover: #111111;
-  --bg-elevated: #161616;
-  --bg-input: #0d0d0d;
-  --bg-tooltip: #1a1a1a;
+  /* Surface — sophisticated dark, not pure black */
+  --bg-root: #0c0d10;
+  --bg-card: #13141a;
+  --bg-secondary: #0f1015;
+  --bg-card-hover: #191a22;
+  --bg-elevated: #1c1d26;
+  --bg-input: #101118;
+  --bg-tooltip: #1e1f28;
 
-  /* Borders — clean white-based */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-default: rgba(255, 255, 255, 0.14);
-  --border-hover: rgba(255, 255, 255, 0.35);
-  --border-active: rgba(255, 255, 255, 0.6);
+  /* Borders — subtle but visible */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-default: rgba(255, 255, 255, 0.11);
+  --border-hover: rgba(255, 255, 255, 0.22);
+  --border-active: rgba(255, 255, 255, 0.45);
 
-  /* Text — pure white hierarchy */
-  --text-primary: #ffffff;
-  --text-secondary: #d4d4d4;
-  --text-muted: #a0a0a0;
-  --text-dim: #6b6b6b;
+  /* Text — high-contrast hierarchy */
+  --text-primary: #f0f0f3;
+  --text-secondary: #b8b9c4;
+  --text-muted: #8b8d9e;
+  --text-dim: #5f6177;
 
-  /* Accents — clean, vivid */
-  --accent: #3b82f6;
-  --accent-glow: rgba(59, 130, 246, 0.15);
-  --accent-bright: #60a5fa;
-  --gold: #facc15;
-  --gold-glow: rgba(250, 204, 21, 0.1);
-  --green: #22c55e;
-  --green-glow: rgba(34, 197, 94, 0.1);
-  --rose: #f43f5e;
-  --rose-glow: rgba(244, 63, 94, 0.1);
-  --cyan: #06b6d4;
+  /* Accents — refined, cohesive palette */
+  --accent: #5b8def;
+  --accent-glow: rgba(91, 141, 239, 0.12);
+  --accent-bright: #7da8f5;
+  --gold: #f0c246;
+  --gold-glow: rgba(240, 194, 70, 0.1);
+  --green: #3dd68c;
+  --green-glow: rgba(61, 214, 140, 0.08);
+  --rose: #f06292;
+  --rose-glow: rgba(240, 98, 146, 0.08);
+  --cyan: #4dd0e1;
 
   /* Shadows */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 20px rgba(0, 0, 0, 0.3);
-  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 24px rgba(59, 130, 246, 0.06);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(91, 141, 239, 0.06);
 
   /* Radius */
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 14px;
   --radius-xl: 20px;
   --radius-full: 9999px;
 
-  /* Typography */
+  /* Typography — Inter for everything, clear hierarchy */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Orbitron', var(--font-sans);
+  --font-display: 'Inter', var(--font-sans);
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
   /* Transitions */
@@ -78,9 +78,11 @@ body {
   font-family: var(--font-sans);
   background: var(--bg-root);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.65;
   min-height: 100vh;
   overflow-x: hidden;
+  font-size: 15px;
+  letter-spacing: -0.01em;
 }
 
 /* Ambient glow — subtle, clean */
@@ -89,8 +91,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -5%, rgba(59, 130, 246, 0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 90% 95%, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+    radial-gradient(ellipse 70% 45% at 50% -5%, rgba(91, 141, 239, 0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 35% 35% at 85% 85%, rgba(91, 141, 239, 0.02) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -104,15 +106,15 @@ body::before {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-full);
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
 
 /* Firefox */
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 /* ── Selection ── */
@@ -133,7 +135,7 @@ a {
   text-decoration: none;
   transition: color var(--transition-fast);
 }
-a:hover { color: var(--gold); }
+a:hover { color: var(--accent); text-decoration: underline; }
 
 /* ── D3 transitions ── */
 svg rect { transition: fill 0.08s ease; }

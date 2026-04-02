@@ -44,7 +44,7 @@
     });
     ctx.lineTo((pts.length - 1) * stepX, SPARK_H);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(59, 130, 246, 0.08)';
+    ctx.fillStyle = 'rgba(91, 141, 239, 0.08)';
     ctx.fill();
 
     // Line
@@ -170,14 +170,15 @@
   }
 
   .panel-title {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
+    font-family: var(--font-sans);
+    font-size: 1.05rem;
+    font-weight: 700;
     color: var(--text-primary);
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.45rem;
+    letter-spacing: -0.02em;
   }
 
   .title-icon {
@@ -186,11 +187,11 @@
   }
 
   .panel-desc {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin: 0.2rem 0 0;
-    line-height: 1.6;
-    max-width: 50ch;
+    font-size: 0.87rem;
+    color: var(--text-muted);
+    margin: 0.25rem 0 0;
+    line-height: 1.65;
+    max-width: 55ch;
   }
 
   .comparison {
@@ -225,8 +226,8 @@
   }
 
   .vs-text {
-    font-family: var(--font-display);
-    font-size: 0.7rem;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
     font-weight: 700;
     color: var(--text-dim);
     letter-spacing: 0.1em;
@@ -260,14 +261,14 @@
   }
 
   .sparkline-label {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-secondary);
-    letter-spacing: 0.02em;
+    letter-spacing: -0.01em;
   }
 
   .sparkline-hint {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     color: var(--text-dim);
   }
 

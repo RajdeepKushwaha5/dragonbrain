@@ -111,9 +111,10 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-primary);
+    letter-spacing: -0.01em;
   }
 
   .input-icon {
@@ -155,14 +156,14 @@
 
   textarea {
     width: 100%;
-    padding: 0.7rem 0.9rem;
+    padding: 0.75rem 1rem;
     background: var(--bg-input);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-size: 0.92rem;
-    line-height: 1.5;
+    font-size: 0.95rem;
+    line-height: 1.6;
     resize: vertical;
     outline: none;
     transition: border-color var(--transition-base), box-shadow var(--transition-base);
@@ -175,7 +176,7 @@
 
   textarea::placeholder {
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .token-stream, .token-empty {
@@ -205,7 +206,7 @@
   .token {
     font-family: var(--font-mono);
     font-size: 0.78rem;
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(91, 141, 239, 0.1);
     color: var(--accent-bright);
     padding: 1px 6px;
     border-radius: 4px;

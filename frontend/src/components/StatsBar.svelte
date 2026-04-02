@@ -46,27 +46,27 @@
     display: flex;
     align-items: baseline;
     gap: 0.35rem;
-    font-size: 0.72rem;
+    font-size: 0.78rem;
   }
 
   .stat-main {
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 700;
   }
 
   .stat-detail {
     color: var(--text-dim);
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.74rem;
   }
 
   .stat-badge {
     margin-left: auto;
-    padding: 0.1rem 0.5rem;
+    padding: 0.12rem 0.5rem;
     background: rgba(255, 255, 255, 0.04);
     border-radius: var(--radius-full);
-    font-size: 0.6rem;
+    font-size: 0.66rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;

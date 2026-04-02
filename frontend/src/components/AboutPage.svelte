@@ -554,9 +554,9 @@
 
 <style>
   .about {
-    max-width: 860px;
+    max-width: 780px;
     margin: 0 auto;
-    padding: 1.5rem 0 3rem;
+    padding: 2rem 1.5rem 4rem;
     animation: fadeIn 0.35s ease;
   }
 
@@ -565,13 +565,13 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.55rem 1.2rem;
+    padding: 0.6rem 1.3rem;
     background: var(--bg-card);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-full);
     color: var(--text-muted);
     font-family: var(--font-sans);
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-base);
@@ -588,15 +588,15 @@
   /* ── Hero ── */
   .hero {
     text-align: center;
-    padding: 2rem 0 2.5rem;
-    margin-bottom: 2rem;
+    padding: 3rem 0 3rem;
+    margin-bottom: 2.5rem;
     border-bottom: 1px solid var(--border-subtle);
   }
 
   .hero-badge {
     display: inline-block;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.14em;
@@ -604,18 +604,18 @@
     background: var(--accent-glow);
     border: 1px solid rgba(91, 141, 239, 0.2);
     border-radius: var(--radius-full);
-    padding: 0.3rem 1rem;
-    margin-bottom: 1.2rem;
+    padding: 0.35rem 1.1rem;
+    margin-bottom: 1.5rem;
   }
 
   .hero-title {
     font-family: var(--font-sans);
-    font-size: 2.4rem;
+    font-size: 2.8rem;
     font-weight: 800;
     color: var(--text-primary);
     letter-spacing: -0.03em;
     line-height: 1.15;
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
   }
 
   .hero-gradient {
@@ -626,11 +626,11 @@
   }
 
   .hero-subtitle {
-    font-size: 1.05rem;
+    font-size: 1.12rem;
     color: var(--text-secondary);
-    line-height: 1.7;
-    max-width: 540px;
-    margin: 0 auto 1.2rem;
+    line-height: 1.8;
+    max-width: 560px;
+    margin: 0 auto 1.5rem;
   }
 
   .hero-meta {
@@ -638,7 +638,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    font-size: 0.82rem;
+    font-size: 0.88rem;
   }
 
   .hero-link {
@@ -689,7 +689,7 @@
 
   .toc-label {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -704,10 +704,10 @@
   }
 
   .toc-link {
-    font-size: 0.8rem;
+    font-size: 0.84rem;
     color: var(--text-muted);
     text-decoration: none;
-    padding: 0.3rem 0.65rem;
+    padding: 0.35rem 0.7rem;
     border-radius: var(--radius-sm);
     white-space: nowrap;
     transition: all var(--transition-fast);
@@ -720,18 +720,18 @@
 
   /* ── Sections ── */
   .section {
-    margin-bottom: 3.5rem;
+    margin-bottom: 4rem;
     scroll-margin-top: 2rem;
   }
 
   .section h2 {
     font-family: var(--font-sans);
-    font-size: 1.15rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.02em;
-    margin-bottom: 1.2rem;
-    padding-bottom: 0.6rem;
+    margin-bottom: 1.4rem;
+    padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
@@ -744,26 +744,26 @@
     font-weight: 700;
     color: var(--accent);
     background: var(--accent-glow);
-    padding: 0.2rem 0.55rem;
+    padding: 0.25rem 0.6rem;
     border-radius: var(--radius-sm);
     letter-spacing: 0.02em;
   }
 
   .section p {
-    font-size: 0.95rem;
+    font-size: 1.02rem;
     color: var(--text-secondary);
-    line-height: 1.85;
-    margin-bottom: 0.8rem;
+    line-height: 1.9;
+    margin-bottom: 1rem;
   }
 
   .section ol {
-    margin: 0.8rem 0 1rem 1.5rem;
+    margin: 1rem 0 1.2rem 1.5rem;
     color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.85;
+    font-size: 1.02rem;
+    line-height: 1.9;
   }
 
-  .section li { margin-bottom: 0.4rem; }
+  .section li { margin-bottom: 0.5rem; }
 
   .section a {
     color: var(--accent-bright);
@@ -780,8 +780,8 @@
 
   .section code {
     font-family: var(--font-mono);
-    font-size: 0.85em;
-    padding: 0.15rem 0.45rem;
+    font-size: 0.88em;
+    padding: 0.18rem 0.5rem;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 5px;
@@ -801,12 +801,12 @@
   /* ── Callout ── */
   .callout {
     display: flex;
-    gap: 0.8rem;
-    padding: 1rem 1.2rem;
+    gap: 1rem;
+    padding: 1.2rem 1.4rem;
     background: var(--accent-glow);
     border: 1px solid rgba(91, 141, 239, 0.18);
     border-radius: var(--radius-md);
-    margin: 1rem 0;
+    margin: 1.2rem 0;
   }
 
   .callout-icon {
@@ -823,7 +823,8 @@
 
   .callout p {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.75;
   }
 
   /* ── Problem Grid ── */
@@ -862,17 +863,17 @@
   }
 
   .problem-card h4 {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.3rem;
   }
 
   .problem-card p {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.6;
   }
 
   /* ── Pillar Grid ── */
@@ -921,16 +922,16 @@
   .pillar-rose .pillar-icon { background: var(--rose-glow); color: var(--rose); }
 
   .pillar-card h3 {
-    font-size: 0.95rem;
+    font-size: 1.02rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.45rem;
   }
 
   .pillar-card p {
-    font-size: 0.85rem;
+    font-size: 0.92rem;
     color: var(--text-secondary);
-    line-height: 1.65;
+    line-height: 1.7;
     margin: 0;
   }
 
@@ -951,7 +952,7 @@
 
   .formula code {
     font-family: var(--font-mono);
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 500;
     color: #7da8f5;
     background: none;
@@ -962,7 +963,7 @@
 
   .formula-label {
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -1015,8 +1016,8 @@
 
   .step {
     display: flex;
-    gap: 1rem;
-    padding: 1.4rem;
+    gap: 1.2rem;
+    padding: 1.6rem;
     background: var(--bg-card);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
@@ -1045,15 +1046,16 @@
   }
 
   .step-content h3 {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.4rem;
   }
 
   .step-content p {
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin-bottom: 0.6rem;
   }
 
   /* ── Comparison Table ── */
@@ -1068,17 +1070,17 @@
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.88rem;
+    font-size: 0.92rem;
   }
 
   th, td {
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1.1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-subtle);
   }
 
   th {
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -1086,12 +1088,15 @@
     background: rgba(255, 255, 255, 0.02);
   }
 
-  td { color: var(--text-secondary); }
+  td {
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
 
   .prop-name {
     color: var(--text-primary);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .bdh-val {
@@ -1112,7 +1117,7 @@
   }
 
   .guide-card {
-    padding: 1.4rem 1.6rem;
+    padding: 1.5rem 1.8rem;
     background: var(--bg-card);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
@@ -1146,25 +1151,26 @@
   .guide-rose .guide-header { color: var(--rose); }
 
   .guide-card h3 {
-    font-size: 1rem;
+    font-size: 1.08rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
   }
 
   .guide-card p {
-    font-size: 0.9rem;
-    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+    line-height: 1.75;
+    margin-bottom: 0.7rem;
   }
 
   .guide-tip {
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     color: var(--text-muted);
-    padding: 0.6rem 0.8rem;
+    padding: 0.7rem 0.9rem;
     background: rgba(255, 255, 255, 0.03);
     border-radius: var(--radius-sm);
-    margin-top: 0.6rem;
-    line-height: 1.6;
+    margin-top: 0.7rem;
+    line-height: 1.65;
   }
 
   .guide-tip strong { color: var(--text-secondary); }
@@ -1184,7 +1190,7 @@
   }
 
   .guide-mode-desc {
-    font-size: 0.85rem;
+    font-size: 0.92rem;
     color: var(--text-secondary);
   }
 
@@ -1212,14 +1218,14 @@
   .config-item:hover { border-color: var(--border-hover); }
 
   .config-label {
-    font-size: 0.76rem;
+    font-size: 0.8rem;
     color: var(--text-dim);
     font-weight: 500;
   }
 
   .config-value {
     font-family: var(--font-mono);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--accent-bright);
   }
@@ -1233,7 +1239,7 @@
   }
 
   .concept {
-    padding: 1.3rem 1.5rem;
+    padding: 1.4rem 1.6rem;
     background: var(--bg-card);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
@@ -1255,15 +1261,16 @@
   .concept-gold:hover { border-color: rgba(240, 194, 70, 0.3); border-left-color: var(--gold); }
 
   .concept h3 {
-    font-size: 1rem;
+    font-size: 1.08rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.55rem;
   }
 
   .concept p {
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin-bottom: 0.6rem;
   }
 
   .concept p:last-child { margin-bottom: 0; }
@@ -1278,12 +1285,14 @@
 
   .usage-steps li {
     counter-increment: step;
-    padding: 1rem 1.2rem 1rem 3.2rem;
+    padding: 1.1rem 1.3rem 1.1rem 3.4rem;
     position: relative;
     background: var(--bg-card);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+    line-height: 1.75;
     transition: border-color var(--transition-base);
   }
 
@@ -1350,23 +1359,25 @@
   }
 
   .ref-card h4 {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.2rem;
   }
 
   .ref-card p {
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     color: var(--text-muted);
     margin: 0;
-    line-height: 1.45;
+    line-height: 1.5;
   }
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
-    .hero-title { font-size: 1.8rem; }
-    .hero-subtitle { font-size: 0.92rem; }
+    .about { padding: 1.5rem 1rem 3rem; }
+    .hero-title { font-size: 2rem; }
+    .hero-subtitle { font-size: 1rem; }
+    .section h2 { font-size: 1.2rem; }
     .hide-mobile { display: none; }
     .step { flex-direction: column; }
     .config-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1378,8 +1389,9 @@
   }
 
   @media (max-width: 480px) {
-    .about { padding: 1rem 0 2rem; }
-    .hero-title { font-size: 1.5rem; }
+    .about { padding: 1rem 0.75rem 2rem; }
+    .hero-title { font-size: 1.6rem; }
+    .section h2 { font-size: 1.1rem; }
     .hero-meta { flex-direction: column; gap: 0.3rem; }
     .hero-sep { display: none; }
     .config-grid { grid-template-columns: repeat(2, 1fr); }

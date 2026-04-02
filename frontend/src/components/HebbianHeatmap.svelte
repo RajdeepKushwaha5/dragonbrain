@@ -89,11 +89,82 @@
     cells.exit().remove();
   }
 
-  // Tooltip
   let tooltipText = '';
   let tooltipX = 0;
   let tooltipY = 0;
   let showTooltip = false;
+
+  // Clickable synapse detail state
+  let selectedConcept = null;
+  let selectedConceptData = null;
+
+  // Synapse activation timeline — per-concept σ magnitude history
+  const synapseHistory = {};  // concept → Array<{ token, avgSigma }>
+  let historyToken = 0;
+
+  // Clear synapse history when memory is reset
+  $: if (!sigmaFlat || tokenCount === 0) {
+    for (const key of Object.keys(synapseHistory)) {
+      delete synapseHistory[key];
+    }
+    historyToken = 0;
+  }
+
+  // Track synapse timeline on each sigma update
+  $: if (sigmaFlat && tokenCount > 0) {
+    for (const [concept, data] of Object.entries(synapseData)) {
+      if (!synapseHistory[concept]) synapseHistory[concept] = [];
+      let totalAbs = 0;
+      let count = 0;
+      for (const pair of data.pairs) {
+        if (pair.i < N && pair.j < N) {
+          totalAbs += Math.abs(sigmaFlat[pair.i * N + pair.j]);
+          count++;
+        }
+      }
+      const avgSigma = count > 0 ? totalAbs / count : 0;
+      const hist = synapseHistory[concept];
+      if (hist.length === 0 || hist[hist.length - 1].token !== tokenCount) {
+        hist.push({ token: tokenCount, avgSigma });
+        if (hist.length > 60) hist.shift();
+      }
+    }
+    historyToken = tokenCount;  // trigger reactivity
+  }
+
+  function handleConceptClick(concept) {
+    if (selectedConcept === concept) {
+      selectedConcept = null;
+      selectedConceptData = null;
+    } else {
+      selectedConcept = concept;
+      const data = synapseData[concept];
+      // Compute live σ values for each synapse pair
+      const pairs = data.pairs.map(pair => {
+        let sigmaVal = 0;
+        if (sigmaFlat && pair.i < N && pair.j < N) {
+          sigmaVal = sigmaFlat[pair.i * N + pair.j];
+        }
+        return { ...pair, sigmaVal };
+      });
+      selectedConceptData = { ...data, concept, pairs };
+    }
+  }
+
+  // Update live σ values when sigma changes (or zero out when cleared)
+  $: if (selectedConcept) {
+    const data = synapseData[selectedConcept];
+    if (data) {
+      const pairs = data.pairs.map(pair => {
+        let sigmaVal = 0;
+        if (sigmaFlat && pair.i < N && pair.j < N) {
+          sigmaVal = sigmaFlat[pair.i * N + pair.j];
+        }
+        return { ...pair, sigmaVal };
+      });
+      selectedConceptData = { ...data, concept: selectedConcept, pairs };
+    }
+  }
 
   function handleMouseMove(e) {
     if (!svgEl) return;
@@ -171,11 +242,81 @@
   <div class="synapse-key">
     <span class="synapse-label">Synapse Concepts:</span>
     {#each Object.entries(synapseData) as [concept, data]}
-      <span class="synapse-tag" style="border-color: {data.color}; color: {data.color}">
+      <button
+        class="synapse-tag"
+        class:synapse-tag-active={selectedConcept === concept}
+        style="border-color: {data.color}; color: {data.color}"
+        on:click={() => handleConceptClick(concept)}
+        title="Click to inspect {data.label} neuron pairs"
+      >
         {data.label}
-      </span>
+      </button>
     {/each}
   </div>
+
+  {#if selectedConceptData}
+    <div class="synapse-detail" style="border-color: {selectedConceptData.color}">
+      <div class="synapse-detail-header">
+        <h4 class="synapse-detail-title" style="color: {selectedConceptData.color}">
+          {selectedConceptData.label}
+        </h4>
+        <button class="synapse-detail-close" on:click={() => { selectedConcept = null; selectedConceptData = null; }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p class="synapse-detail-desc">
+        Neuron pairs that co-activate for <strong>{selectedConceptData.concept}</strong>-related patterns.
+        Live σ values update as you type.
+      </p>
+      <div class="synapse-pairs-grid">
+        {#each selectedConceptData.pairs as pair, idx}
+          <div class="synapse-pair" class:synapse-pair-active={Math.abs(pair.sigmaVal) > 0.001}>
+            <span class="pair-index">#{idx + 1}</span>
+            <span class="pair-neurons">σ({pair.i}, {pair.j})</span>
+            <span class="pair-value" class:pair-value-positive={pair.sigmaVal > 0.001} class:pair-value-negative={pair.sigmaVal < -0.001}>
+              {pair.sigmaVal.toFixed(2)}
+            </span>
+            <div class="pair-bar-track">
+              <div
+                class="pair-bar-fill"
+                style="width: {Math.min(100, Math.abs(pair.sigmaVal) / (Math.abs(pair.strength) + 1) * 100)}%; background: {selectedConceptData.color}"
+              ></div>
+            </div>
+          </div>
+        {/each}
+      </div>
+      <p class="synapse-detail-note">
+        {selectedConceptData.pairs.filter(p => Math.abs(p.sigmaVal) > 0.001).length} of {selectedConceptData.pairs.length} pairs currently active
+      </p>
+
+      <!-- Synapse Activation Timeline -->
+      {#if synapseHistory[selectedConcept] && synapseHistory[selectedConcept].length > 1}
+        {@const hist = synapseHistory[selectedConcept]}
+        {@const maxH = Math.max(...hist.map(h => h.avgSigma), 0.001)}
+        {@const sparkW = 220}
+        {@const sparkH = 36}
+        <div class="synapse-timeline">
+          <span class="timeline-label">σ Timeline</span>
+          <svg width={sparkW} height={sparkH} class="timeline-svg">
+            <polyline
+              fill="none"
+              stroke={selectedConceptData.color}
+              stroke-width="1.5"
+              stroke-linejoin="round"
+              points={hist.map((h, i) => `${(i / (hist.length - 1)) * (sparkW - 4) + 2},${sparkH - 2 - (h.avgSigma / maxH) * (sparkH - 4)}`).join(' ')}
+            />
+            <circle
+              cx={sparkW - 2}
+              cy={sparkH - 2 - (hist[hist.length - 1].avgSigma / maxH) * (sparkH - 4)}
+              r="2.5"
+              fill={selectedConceptData.color}
+            />
+          </svg>
+          <span class="timeline-val">{hist[hist.length - 1].avgSigma.toFixed(3)}</span>
+        </div>
+      {/if}
+    </div>
+  {/if}
 
   {#if sigmaDelta && sigmaDelta.changedCells > 0}
     <div class="delta-bar">
@@ -351,6 +492,178 @@
     border: 1px solid;
     border-radius: 999px;
     opacity: 0.85;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s ease;
+  }
+
+  .synapse-tag:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.06);
+  }
+
+  .synapse-tag-active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
+  }
+
+  .synapse-detail {
+    margin-top: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid;
+    border-radius: var(--radius-md);
+    animation: slideDown 0.2s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .synapse-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+  }
+
+  .synapse-detail-title {
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .synapse-detail-close {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.1s ease;
+  }
+
+  .synapse-detail-close:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+  }
+
+  .synapse-detail-desc {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin: 0 0 0.5rem;
+    line-height: 1.5;
+  }
+
+  .synapse-detail-desc strong {
+    color: var(--text-secondary);
+  }
+
+  .synapse-pairs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.3rem;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  .synapse-pair {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.4rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    transition: background 0.1s ease;
+  }
+
+  .synapse-pair-active {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+  }
+
+  .pair-index {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    min-width: 1.5em;
+  }
+
+  .pair-neurons {
+    white-space: nowrap;
+  }
+
+  .pair-value {
+    margin-left: auto;
+    font-weight: 600;
+    min-width: 3.5em;
+    text-align: right;
+  }
+
+  .pair-value-positive { color: var(--emerald); }
+  .pair-value-negative { color: var(--rose); }
+
+  .pair-bar-track {
+    width: 30px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .pair-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.15s ease;
+  }
+
+  .synapse-detail-note {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    margin: 0.4rem 0 0;
+    font-family: var(--font-mono);
+  }
+
+  .synapse-timeline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .timeline-label {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .timeline-svg {
+    flex-shrink: 0;
+  }
+
+  .timeline-val {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    font-weight: 600;
+    min-width: 3em;
+    text-align: right;
   }
 
   .footnote {

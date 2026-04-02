@@ -80,7 +80,7 @@ export class GPTModel {
   }
 
   /**
-   * Parse ONNX outputs — extract last-timestep MLP activations.
+   * Parse ONNX outputs — extract last-timestep MLP activations and logits.
    * @private
    */
   _parseOutputs(results, T) {
@@ -96,6 +96,33 @@ export class GPTModel {
       }
     }
 
-    return { activations, T };
+    // Extract logits for prediction comparison
+    let logits = null;
+    const logitsRaw = results['logits']?.data;
+    if (logitsRaw) {
+      const vocabSize = 256;
+      const start = (T - 1) * vocabSize;
+      logits = logitsRaw.slice(start, start + vocabSize);
+    }
+
+    return { activations, logits, T };
+  }
+
+  topKPredictions(logits, k = 5) {
+    if (!logits || logits.length === 0) return [];
+    let maxVal = -Infinity;
+    for (let i = 0; i < logits.length; i++) {
+      if (logits[i] > maxVal) maxVal = logits[i];
+    }
+    const probs = new Float32Array(logits.length);
+    let sumExp = 0;
+    for (let i = 0; i < logits.length; i++) {
+      probs[i] = Math.exp(logits[i] - maxVal);
+      sumExp += probs[i];
+    }
+    for (let i = 0; i < probs.length; i++) probs[i] /= sumExp;
+    const indexed = Array.from(probs).map((p, i) => ({ token: i, prob: p }));
+    indexed.sort((a, b) => b.prob - a.prob);
+    return indexed.slice(0, k);
   }
 }

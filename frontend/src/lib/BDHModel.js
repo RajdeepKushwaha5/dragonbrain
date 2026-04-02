@@ -11,7 +11,7 @@
  */
 
 import {
-  NH, N, TOTAL_NEURONS,
+  NH, N, D, TOTAL_NEURONS,
   extractLastToken, mergeHeads, updateSigma as updateSigmaMatrix,
   generateDenseReference, extractScoresMatrix,
 } from './activation_math.js';
@@ -24,6 +24,7 @@ export class BDHModel {
     this.mockMode = false;
     this.ready = false;
     this._ort = null;            // cached onnxruntime-web module
+    this.weights = null;         // { encoder: Float32Array, lm_head: Float32Array }
   }
 
   /**
@@ -52,6 +53,94 @@ export class BDHModel {
       this.mockMode = true;
       this.ready = true;
     }
+  }
+
+  /**
+   * Load extracted weight matrices (encoder, lm_head) for σ-modulated inference.
+   * Binary format: encoder(1024*64 floats) + lm_head(64*256 floats), float32 LE.
+   * @param {string} weightsPath - Path to bdh_weights.bin
+   */
+  async loadWeights(weightsPath) {
+    try {
+      const resp = await fetch(weightsPath);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const buf = await resp.arrayBuffer();
+      const all = new Float32Array(buf);
+
+      const encoderSize = TOTAL_NEURONS * D;  // 1024 * 64 = 65536
+      const lmHeadSize = D * 256;             // 64 * 256 = 16384
+
+      this.weights = {
+        encoder: all.slice(0, encoderSize),
+        lm_head: all.slice(encoderSize, encoderSize + lmHeadSize),
+      };
+      console.log(`BDH weights loaded: encoder(${encoderSize}), lm_head(${lmHeadSize})`);
+    } catch (err) {
+      console.warn('Could not load BDH weights for σ-modulated inference:', err.message);
+    }
+  }
+
+  /**
+   * Compute σ-modulated logit corrections using accumulated Hebbian memory.
+   *
+   * Implements the paper's key equation:
+   *   a*_t = σ · x_t          → (N,) σ-weighted activation
+   *   correction_D = E^T · a* → (D,) back to embedding space
+   *   logit_bias = correction · W_lm → (vocab,) logit adjustment
+   *
+   * This is the mechanism by which accumulated σ influences predictions —
+   * the core "inference-time learning" property of BDH.
+   *
+   * @param {Float32Array[]} x_heads - Per-head x activations for last token
+   * @param {number} layer - Layer index
+   * @returns {Float32Array|null} Logit bias (256), or null if weights not loaded
+   */
+  computeSigmaLogits(x_heads, layer = 0) {
+    if (!this.weights) return null;
+
+    const { encoder, lm_head } = this.weights;
+    const correction = new Float32Array(D);
+
+    for (let h = 0; h < NH; h++) {
+      const x = x_heads[h];
+      const sigma = this.getSigma(layer, h);
+
+      // a_sigma = σ · x → (N,) : how strongly past co-activations match current x
+      const a_sigma = new Float32Array(N);
+      for (let i = 0; i < N; i++) {
+        let sum = 0;
+        const row = i * N;
+        for (let j = 0; j < N; j++) {
+          sum += sigma[row + j] * x[j];
+        }
+        // ReLU — paper requires positive activations
+        a_sigma[i] = sum > 0 ? sum : 0;
+      }
+
+      // Project through encoder: correction += E[h*N:(h+1)*N, :]^T · a_sigma
+      // encoder is (nh*N, D) row-major, so encoder[(h*N+i)*D + d]
+      const hOffset = h * N;
+      for (let d = 0; d < D; d++) {
+        let sum = 0;
+        for (let i = 0; i < N; i++) {
+          sum += encoder[(hOffset + i) * D + d] * a_sigma[i];
+        }
+        correction[d] += sum;
+      }
+    }
+
+    // Project to vocab: logit_bias = correction · lm_head
+    // lm_head is (D, 256) row-major
+    const logitBias = new Float32Array(256);
+    for (let v = 0; v < 256; v++) {
+      let sum = 0;
+      for (let d = 0; d < D; d++) {
+        sum += correction[d] * lm_head[d * 256 + v];
+      }
+      logitBias[v] = sum;
+    }
+
+    return logitBias;
   }
 
   /**

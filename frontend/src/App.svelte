@@ -29,10 +29,89 @@
   let inferenceMs = 0;
   let lastLogits = null;
   let topPredictions = [];
+  let sigmaTopPredictions = [];
+  let gptTopPredictions = [];
+  let predictionShift = null;  // { from, to } when σ changes top-1
   let showGuide = false;
+
+  // ── Demo Mode ──
+  let demoRunning = false;
+  let demoTimer = null;
+  let demoText = null;
+  const DEMO_SCRIPT = "To be, or not to be, that is the question. Whether 'tis nobler in the mind to suffer the slings and arrows of outrageous fortune, or to take arms against a sea of troubles.";
+
+  function startDemo() {
+    if (demoRunning || teachRunning) { stopDemo(); return; }
+    handleClearMemory();
+    demoRunning = true;
+    let idx = 0;
+
+    demoTimer = setInterval(() => {
+      if (idx >= DEMO_SCRIPT.length) { stopDemo(); return; }
+      idx++;
+      const partial = DEMO_SCRIPT.slice(0, idx);
+      demoText = partial;
+
+      const bytes = tokenize(partial);
+      const tail = Array.from(bytes.slice(-128));
+      inputText.set(partial);
+      tokenBuffer.set(tail);
+
+      handleInput({ detail: { tokens: tail } });
+    }, 120);
+  }
+
+  function stopDemo() {
+    demoRunning = false;
+    teachRunning = false;
+    teachPhase = '';
+    if (demoTimer) clearInterval(demoTimer);
+    demoTimer = null;
+    demoText = null;
+  }
+
+  // ── Teach Mode ──
+  let teachRunning = false;
+  let teachPhase = '';  // 'repeat-1', 'repeat-2', 'repeat-3', 'test'
+  const TEACH_PHRASE = "the cat sat on the mat. ";
+  const TEACH_TEST = "the cat sat on the ";
+
+  function startTeach() {
+    if (teachRunning || demoRunning) { stopDemo(); return; }
+    handleClearMemory();
+    teachRunning = true;
+    teachPhase = 'repeat-1';
+
+    let fullScript = TEACH_PHRASE + TEACH_PHRASE + TEACH_PHRASE + TEACH_TEST;
+    let idx = 0;
+    let phaseLen1 = TEACH_PHRASE.length;
+    let phaseLen2 = phaseLen1 * 2;
+    let phaseLen3 = phaseLen1 * 3;
+
+    demoTimer = setInterval(() => {
+      if (idx >= fullScript.length) { clearInterval(demoTimer); demoTimer = null; teachRunning = false; teachPhase = 'done'; demoText = null; return; }
+      idx++;
+
+      if (idx <= phaseLen1) teachPhase = 'repeat-1';
+      else if (idx <= phaseLen2) teachPhase = 'repeat-2';
+      else if (idx <= phaseLen3) teachPhase = 'repeat-3';
+      else teachPhase = 'test';
+
+      const partial = fullScript.slice(0, idx);
+      demoText = partial;
+
+      const bytes = tokenize(partial);
+      const tail = Array.from(bytes.slice(-128));
+      inputText.set(partial);
+      tokenBuffer.set(tail);
+
+      handleInput({ detail: { tokens: tail } });
+    }, 100);
+  }
 
   onMount(async () => {
     await model.load('./model.onnx');
+    await model.loadWeights('./bdh_weights.bin');
     modelReady.set(true);
 
     // Load GPT model using shared ort runtime
@@ -53,6 +132,9 @@
       sigmaDeltaLocal = null;
       lastLogits = null;
       topPredictions = [];
+      sigmaTopPredictions = [];
+      gptTopPredictions = [];
+      predictionShift = null;
       return;
     }
     if (!model.ready) return;
@@ -85,6 +167,30 @@
 
       totalTokens++;
       tokenCount.set(totalTokens);
+
+      // Compute σ-modulated predictions (inference-time learning)
+      const sigmaLogits = model.computeSigmaLogits(
+        result.layers[$selectedLayer].x_last, $selectedLayer
+      );
+      if (sigmaLogits && lastLogits) {
+        // α grows with experience: more tokens → stronger σ influence
+        const alpha = 0.01 * Math.log(1 + totalTokens);
+        const adjustedLogits = new Float32Array(lastLogits.length);
+        for (let i = 0; i < lastLogits.length; i++) {
+          adjustedLogits[i] = lastLogits[i] + alpha * sigmaLogits[i];
+        }
+        sigmaTopPredictions = model.topKPredictions(adjustedLogits, 5);
+
+        // Track prediction shift
+        if (topPredictions.length > 0 && sigmaTopPredictions.length > 0) {
+          const rawTop = topPredictions[0].token;
+          const sigmaTop = sigmaTopPredictions[0].token;
+          predictionShift = rawTop !== sigmaTop ? { from: rawTop, to: sigmaTop } : null;
+        }
+      } else {
+        sigmaTopPredictions = [];
+        predictionShift = null;
+      }
 
       sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
       sigmaData.set({ ...model.sigma });
@@ -120,6 +226,11 @@
           const gptResult = await gptModel.runToken(tokens);
           if (seq === inferenceSeq) {
             gptData.set(gptResult);
+            if (gptResult && gptResult.logits) {
+              gptTopPredictions = gptModel.topKPredictions(gptResult.logits, 5);
+            } else {
+              gptTopPredictions = [];
+            }
           }
         } catch (err) {
           console.warn('GPT inference error:', err);
@@ -133,6 +244,7 @@
   }
 
   function handleClearMemory() {
+    inferenceSeq++;             // cancel any in-flight inference
     model.resetMemory();
     totalTokens = 0;
     tokenCount.set(0);
@@ -145,6 +257,11 @@
     sparsityHistory.set([]);
     lastLogits = null;
     topPredictions = [];
+    sigmaTopPredictions = [];
+    gptTopPredictions = [];
+    predictionShift = null;
+    teachPhase = '';
+    demoText = null;
   }
 
   $: if ($selectedLayer !== undefined || $selectedHead !== undefined) {
@@ -168,6 +285,14 @@
       <button class="about-btn" on:click={() => showGuide = !showGuide}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span class="about-btn-text">Guide</span>
+      </button>
+      <button class="about-btn demo-btn" class:demo-active={demoRunning} on:click={startDemo}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span class="about-btn-text">{demoRunning ? 'Stop' : 'Demo'}</span>
+      </button>
+      <button class="about-btn teach-btn" class:teach-active={teachRunning} on:click={startTeach}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        <span class="about-btn-text">{teachRunning ? 'Stop' : 'Teach'}</span>
       </button>
       <button class="about-btn" on:click={() => { currentPage = 'about'; window.scrollTo(0, 0); }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -215,7 +340,7 @@
   {:else}
     <!-- ── Controls ── -->
     <section class="controls-section">
-      <TokenInput on:input={handleInput} />
+      <TokenInput on:input={handleInput} externalText={demoText} />
       <div class="controls-row">
         <LayerSelector />
         {#if inferenceMs > 0}
@@ -227,13 +352,67 @@
     <!-- ── Predictions Bar ── -->
     {#if topPredictions.length > 0}
       <section class="predictions-bar" aria-label="Next token predictions">
-        <span class="pred-label">Next:</span>
-        {#each topPredictions as pred}
-          <span class="pred-token" title="Byte {pred.token} — {(pred.prob * 100).toFixed(1)}%">
-            <span class="pred-char">{tokenToChar(pred.token)}</span>
-            <span class="pred-prob">{(pred.prob * 100).toFixed(0)}%</span>
-          </span>
-        {/each}
+        <div class="pred-row">
+          <span class="pred-label">BDH Raw:</span>
+          {#each topPredictions as pred}
+            <span class="pred-token" title="Byte {pred.token} — {(pred.prob * 100).toFixed(1)}%">
+              <span class="pred-char">{tokenToChar(pred.token)}</span>
+              <span class="pred-prob">{(pred.prob * 100).toFixed(0)}%</span>
+            </span>
+          {/each}
+        </div>
+        {#if sigmaTopPredictions.length > 0}
+          <div class="pred-row sigma-row">
+            <span class="pred-label sigma-label">σ-Learned:</span>
+            {#each sigmaTopPredictions as pred}
+              <span class="pred-token sigma-token" title="Byte {pred.token} — {(pred.prob * 100).toFixed(1)}% (after σ modulation)">
+                <span class="pred-char">{tokenToChar(pred.token)}</span>
+                <span class="pred-prob">{(pred.prob * 100).toFixed(0)}%</span>
+              </span>
+            {/each}
+            {#if predictionShift}
+              <span class="shift-indicator" title="σ memory shifted the top prediction">
+                ⇄ shifted: <strong>{tokenToChar(predictionShift.from)}</strong> → <strong>{tokenToChar(predictionShift.to)}</strong>
+              </span>
+            {/if}
+            <span class="sigma-indicator" title="Predictions modulated by accumulated Hebbian memory">
+              ⚡ {totalTokens} tokens learned
+            </span>
+          </div>
+        {/if}
+        {#if gptTopPredictions.length > 0}
+          <div class="pred-row gpt-row">
+            <span class="pred-label gpt-label">GPT:</span>
+            {#each gptTopPredictions as pred}
+              <span class="pred-token gpt-token" title="GPT byte {pred.token} — {(pred.prob * 100).toFixed(1)}%">
+                <span class="pred-char">{tokenToChar(pred.token)}</span>
+                <span class="pred-prob">{(pred.prob * 100).toFixed(0)}%</span>
+              </span>
+            {/each}
+            <span class="gpt-indicator">Transformer baseline</span>
+          </div>
+        {/if}
+      </section>
+    {/if}
+
+    <!-- ── Teach Phase Indicator ── -->
+    {#if teachRunning || teachPhase === 'done'}
+      <section class="teach-bar">
+        <span class="teach-icon">🧠</span>
+        {#if teachPhase === 'repeat-1'}
+          <span class="teach-text">Teaching: <strong>Repetition 1/3</strong> — building σ memory...</span>
+        {:else if teachPhase === 'repeat-2'}
+          <span class="teach-text">Teaching: <strong>Repetition 2/3</strong> — σ strengthening...</span>
+        {:else if teachPhase === 'repeat-3'}
+          <span class="teach-text">Teaching: <strong>Repetition 3/3</strong> — σ patterns consolidating...</span>
+        {:else if teachPhase === 'test'}
+          <span class="teach-text"><strong>Testing:</strong> Watch σ-Learned predictions shift toward "mat" — the model <em>remembers</em>!</span>
+        {:else if teachPhase === 'done'}
+          <span class="teach-text"><strong>Done!</strong> σ memory learned the pattern. Try typing yourself to see predictions.</span>
+        {/if}
+        <div class="teach-progress">
+          <div class="teach-progress-fill" style="width: {teachPhase === 'repeat-1' ? '25' : teachPhase === 'repeat-2' ? '50' : teachPhase === 'repeat-3' ? '75' : '100'}%"></div>
+        </div>
       </section>
     {/if}
 
@@ -363,6 +542,74 @@
     color: var(--text-primary);
     box-shadow: 0 0 12px rgba(255, 255, 255, 0.06);
     transform: translateY(-1px);
+  }
+
+  .demo-btn {
+    border-color: var(--emerald);
+    color: var(--emerald);
+  }
+
+  .demo-active {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: var(--emerald) !important;
+    color: var(--emerald) !important;
+    animation: demoPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes demoPulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(16, 185, 129, 0.15); }
+    50% { box-shadow: 0 0 14px rgba(16, 185, 129, 0.35); }
+  }
+
+  .teach-btn {
+    border-color: var(--cyan, #06b6d4);
+    color: var(--cyan, #06b6d4);
+  }
+
+  .teach-active {
+    background: rgba(6, 182, 212, 0.12) !important;
+    border-color: var(--cyan, #06b6d4) !important;
+    color: var(--cyan, #06b6d4) !important;
+    animation: demoPulse 1.5s ease-in-out infinite;
+  }
+
+  .teach-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    background: rgba(6, 182, 212, 0.06);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-radius: var(--radius-md);
+    margin-bottom: 0.8rem;
+    animation: slideUp 0.3s ease;
+  }
+
+  .teach-icon { font-size: 1.1rem; }
+
+  .teach-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+
+  .teach-text strong { color: var(--cyan, #06b6d4); }
+  .teach-text em { color: var(--gold); font-style: normal; }
+
+  .teach-progress {
+    width: 60px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .teach-progress-fill {
+    height: 100%;
+    background: var(--cyan, #06b6d4);
+    border-radius: 2px;
+    transition: width 0.3s ease;
   }
 
   /* ── Guide Overlay ── */
@@ -539,14 +786,20 @@
   /* ── Predictions Bar ── */
   .predictions-bar {
     display: flex;
-    align-items: center;
-    gap: 0.4rem;
+    flex-direction: column;
+    gap: 0.35rem;
     padding: 0.45rem 0.7rem;
     margin-bottom: 1rem;
     background: var(--bg-secondary);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     overflow-x: auto;
+  }
+
+  .pred-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     flex-wrap: wrap;
   }
 
@@ -587,6 +840,78 @@
   .pred-prob {
     color: var(--text-dim);
     font-size: 0.68rem;
+  }
+
+  .sigma-row {
+    border-top: 1px solid rgba(250, 204, 21, 0.12);
+    padding-top: 0.3rem;
+  }
+
+  .sigma-label {
+    color: var(--gold) !important;
+  }
+
+  .sigma-token {
+    background: rgba(250, 204, 21, 0.08) !important;
+    border-color: rgba(250, 204, 21, 0.25) !important;
+  }
+
+  .sigma-token:hover {
+    background: rgba(250, 204, 21, 0.15) !important;
+  }
+
+  .sigma-indicator {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--gold);
+    opacity: 0.7;
+    margin-left: auto;
+  }
+
+  .shift-indicator {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--rose);
+    background: rgba(244, 63, 94, 0.08);
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    animation: shiftPulse 0.5s ease;
+  }
+
+  .shift-indicator strong {
+    color: var(--text-primary);
+  }
+
+  @keyframes shiftPulse {
+    0% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  .gpt-row {
+    border-top: 1px solid rgba(139, 92, 246, 0.12);
+    padding-top: 0.3rem;
+  }
+
+  .gpt-label {
+    color: var(--violet, #8b5cf6) !important;
+  }
+
+  .gpt-token {
+    background: rgba(139, 92, 246, 0.08) !important;
+    border-color: rgba(139, 92, 246, 0.25) !important;
+  }
+
+  .gpt-token:hover {
+    background: rgba(139, 92, 246, 0.15) !important;
+  }
+
+  .gpt-indicator {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--violet, #8b5cf6);
+    opacity: 0.6;
+    margin-left: auto;
   }
 
   /* ── Panels ── */

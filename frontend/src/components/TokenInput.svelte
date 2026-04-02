@@ -4,7 +4,16 @@
   import { tokenize, tokenToChar } from '../lib/tokenizer.js';
 
   const dispatch = createEventDispatcher();
+
+  /** External text set by demo mode — synced to textarea */
+  export let externalText = null;
+
   let textValue = '';
+
+  // Sync from external (demo mode)
+  $: if (externalText !== null && externalText !== textValue) {
+    textValue = externalText;
+  }
 
   function handleInput() {
     inputText.set(textValue);

@@ -9,6 +9,72 @@
   let container;
   let simulation = null;
   let graphMode = 'gx';
+  let communityMap = {};  // nodeId → communityId
+  let showCommunities = true;
+
+  // Community color palette
+  const COMMUNITY_PALETTE = [
+    '#3b82f6', '#f59e0b', '#10b981', '#ef4444',
+    '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
+    '#14b8a6', '#a855f7', '#eab308', '#64748b',
+  ];
+
+  function detectCommunities(nodes, links) {
+    const comm = {};
+    nodes.forEach(n => comm[n.id] = n.id);
+    const adj = {};
+    nodes.forEach(n => adj[n.id] = []);
+    links.forEach(l => {
+      // Raw data uses array indices for source/target; D3-mutated data uses node objects
+      const s = typeof l.source === 'object' ? l.source.id : (nodes[l.source] ? nodes[l.source].id : l.source);
+      const t = typeof l.target === 'object' ? l.target.id : (nodes[l.target] ? nodes[l.target].id : l.target);
+      if (s === t) return;
+      if (!adj[s] || !adj[t]) return;
+      adj[s].push({ id: t, weight: Math.abs(l.weight) });
+      adj[t].push({ id: s, weight: Math.abs(l.weight) });
+    });
+    for (let iter = 0; iter < 30; iter++) {
+      let changed = false;
+      const order = [...nodes];
+      // Deterministic shuffle via index-based swap
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = ((i * 2654435761) >>> 0) % (i + 1);
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+      for (const node of order) {
+        const neighbors = adj[node.id];
+        if (!neighbors || neighbors.length === 0) continue;
+        const votes = {};
+        for (const nb of neighbors) {
+          const c = comm[nb.id];
+          votes[c] = (votes[c] || 0) + nb.weight;
+        }
+        let bestC = comm[node.id];
+        let bestW = -Infinity;
+        for (const c of Object.keys(votes)) {
+          if (votes[c] > bestW) { bestW = votes[c]; bestC = parseInt(c); }
+        }
+        if (bestC !== comm[node.id]) { comm[node.id] = bestC; changed = true; }
+      }
+      if (!changed) break;
+    }
+    return comm;
+  }
+
+  function getCommunityColor(nodeId) {
+    if (!showCommunities || communityMap[nodeId] === undefined) return '#3b82f6';
+    const ids = [...new Set(Object.values(communityMap))].sort((a,b) => a - b);
+    const idx = ids.indexOf(communityMap[nodeId]);
+    return COMMUNITY_PALETTE[idx % COMMUNITY_PALETTE.length];
+  }
+
+  $: communityCount = [...new Set(Object.values(communityMap))].length;
+  $: communityLegend = showCommunities && communityCount > 1
+    ? [...new Set(Object.values(communityMap))].sort((a,b) => a - b).map((id, i) => ({
+        color: COMMUNITY_PALETTE[i % COMMUNITY_PALETTE.length],
+        label: `C${i + 1}`,
+      }))
+    : [];
 
   // Evolution toggle
   let showEvolution = false;
@@ -27,7 +93,7 @@
   let currentData = cloneGraph(graphData.gx);
 
   function getActiveSource() {
-    return showEvolution ? snapshot : graphData;
+    return showEvolution ? evolutionData.snapshots[snapshotIdx] : graphData;
   }
 
   function switchMode(mode) {
@@ -60,6 +126,7 @@
 
   function rebuildGraph() {
     if (!container) return;
+    communityMap = detectCommunities(currentData.nodes, currentData.links);
     const svg = d3.select(container);
     svg.selectAll('*').remove();
     buildGraph(svg, currentData);
@@ -71,9 +138,15 @@
     // Gradient defs
     const defs = svg.append('defs');
 
-    const grad = defs.append('radialGradient').attr('id', 'node-glow');
-    grad.append('stop').attr('offset', '0%').attr('stop-color', '#3b82f6').attr('stop-opacity', 0.6);
-    grad.append('stop').attr('offset', '100%').attr('stop-color', '#3b82f6').attr('stop-opacity', 0);
+    // Create glow gradient per community color
+    const usedColors = new Set(data.nodes.map(n => getCommunityColor(n.id)));
+    usedColors.add('#facc15'); // active gold
+    for (const color of usedColors) {
+      const gid = `node-glow-${color.replace('#', '')}`;
+      const grad = defs.append('radialGradient').attr('id', gid);
+      grad.append('stop').attr('offset', '0%').attr('stop-color', color).attr('stop-opacity', 0.6);
+      grad.append('stop').attr('offset', '100%').attr('stop-color', color).attr('stop-opacity', 0);
+    }
 
     const g = svg.append('g');
 
@@ -98,7 +171,10 @@
       .append('circle')
       .attr('class', 'glow')
       .attr('r', d => sizeScale(d.degree) * 2.5)
-      .attr('fill', 'url(#node-glow)')
+      .attr('fill', d => {
+        const c = getCommunityColor(d.id);
+        return `url(#node-glow-${c.replace('#', '')})`;
+      })
       .attr('opacity', d => Math.min(0.4, d.degree / 80));
 
     // Nodes
@@ -108,7 +184,7 @@
       .append('circle')
       .attr('class', 'node')
       .attr('r', d => sizeScale(d.degree))
-      .attr('fill', '#3b82f6')
+      .attr('fill', d => getCommunityColor(d.id))
       .attr('stroke', 'rgba(255,255,255,0.15)')
       .attr('stroke-width', 0.6)
       .attr('cursor', 'grab')
@@ -148,7 +224,10 @@
   }
 
   onMount(() => {
-    if (container) buildGraph(d3.select(container), currentData);
+    if (container) {
+      communityMap = detectCommunities(currentData.nodes, currentData.links);
+      buildGraph(d3.select(container), currentData);
+    }
   });
 
   onDestroy(() => {
@@ -159,11 +238,17 @@
     d3.select(container).selectAll('circle.node')
       .attr('fill', d => {
         if (!d) return '#3b82f6';
-        return activeNeuronIds.has(d.id) ? '#facc15' : '#3b82f6';
+        return activeNeuronIds.has(d.id) ? '#facc15' : getCommunityColor(d.id);
       })
       .attr('stroke', d => {
         if (!d) return 'rgba(255,255,255,0.15)';
         return activeNeuronIds.has(d.id) ? 'rgba(250,204,21,0.5)' : 'rgba(255,255,255,0.15)';
+      });
+    d3.select(container).selectAll('circle.glow')
+      .attr('fill', d => {
+        if (!d) return 'url(#node-glow-3b82f6)';
+        const c = activeNeuronIds.has(d.id) ? '#facc15' : getCommunityColor(d.id);
+        return `url(#node-glow-${c.replace('#', '')})`;
       });
   }
 
@@ -210,6 +295,10 @@
       </button>
     </div>
     <div class="mode-right">
+      <button class="evo-btn" class:active={showCommunities} on:click={() => { showCommunities = !showCommunities; rebuildGraph(); }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="8" r="2"/><circle cx="20" cy="8" r="2"/><circle cx="4" cy="16" r="2"/><circle cx="20" cy="16" r="2"/></svg>
+        Communities{#if showCommunities && communityCount > 1}&nbsp;({communityCount}){/if}
+      </button>
       <button class="evo-btn" class:active={showEvolution} on:click={toggleEvolution}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Evolution
@@ -241,14 +330,23 @@
     <svg bind:this={container} class="graph-svg" role="img" aria-label="Emergent graph topology"></svg>
 
     <div class="legend">
-      <div class="legend-item">
-        <span class="legend-circle" style="background: #3b82f6;"></span>
-        <span>Excitatory</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-circle" style="background: var(--rose);"></span>
-        <span>Inhibitory</span>
-      </div>
+      {#if communityLegend.length > 1}
+        {#each communityLegend as c}
+          <div class="legend-item">
+            <span class="legend-circle" style="background: {c.color};"></span>
+            <span>{c.label}</span>
+          </div>
+        {/each}
+      {:else}
+        <div class="legend-item">
+          <span class="legend-circle" style="background: #3b82f6;"></span>
+          <span>Excitatory</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-circle" style="background: var(--rose);"></span>
+          <span>Inhibitory</span>
+        </div>
+      {/if}
       <div class="legend-item">
         <span class="legend-circle" style="background: var(--gold);"></span>
         <span>Active now</span>
@@ -262,7 +360,11 @@
       Toggle to "Trained" to see the scale-free graph emerge.
     {:else}
       This structure <strong>self-organized from random weights</strong> during training.
-      Hub neurons act as real organizational centers — the graph is scale-free (Section 5 of the paper).
+      {#if showCommunities && communityCount > 1}
+        <strong>{communityCount} communities</strong> detected via label propagation — neurons cluster into functional modules.
+      {:else}
+        Hub neurons act as real organizational centers — the graph is scale-free (Section 5 of the paper).
+      {/if}
       {#if !showEvolution}Click <em>Evolution</em> to compare with random init.{/if}
     {/if}
     <span class="formula">{modeInfo[graphMode].formula}</span>

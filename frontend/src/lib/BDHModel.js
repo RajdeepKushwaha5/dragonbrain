@@ -184,10 +184,11 @@ export class BDHModel {
       const xyFlat = results[`layer_${l}_xy_sparse`]?.data;
       const attnFlat = results[`layer_${l}_attn_scores`]?.data;
 
+      const emptyHeads = () => Array.from({ length: this.nHeads }, () => new Float32Array(this.N));
       data.layers.push({
-        x_last: extractLastToken(xFlat, T),
-        y_last: extractLastToken(yFlat, T),
-        xy_last: extractLastToken(xyFlat, T),
+        x_last: xFlat ? extractLastToken(xFlat, T) : emptyHeads(),
+        y_last: yFlat ? extractLastToken(yFlat, T) : emptyHeads(),
+        xy_last: xyFlat ? extractLastToken(xyFlat, T) : emptyHeads(),
         attn_scores: attnFlat,
         T,
       });

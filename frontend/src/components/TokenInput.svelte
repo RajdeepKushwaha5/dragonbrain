@@ -18,7 +18,8 @@
   function handleInput() {
     inputText.set(textValue);
     const bytes = tokenize(textValue);
-    const tail = Array.from(bytes);
+    // ONNX model trained with max_seq_len=128; limit to avoid WASM OOM on attention tensor
+    const tail = Array.from(bytes.slice(-128));
     tokenBuffer.set(tail);
     dispatch('input', { text: textValue, tokens: tail });
   }
@@ -30,8 +31,8 @@
     }
   }
 
-  $: visibleTokens = $tokenBuffer;
-  $: byteCount = textValue ? tokenize(textValue).length : 0;
+  $: visibleTokens = textValue ? Array.from(tokenize(textValue)) : [];
+  $: byteCount = visibleTokens.length;
 </script>
 
 <div class="input-card">

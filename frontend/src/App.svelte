@@ -264,6 +264,8 @@
     demoText = null;
   }
 
+  function autoFocus(node) { requestAnimationFrame(() => node.focus()); }
+
   $: if ($selectedLayer !== undefined || $selectedHead !== undefined) {
     sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
   }
@@ -303,8 +305,8 @@
 
   <!-- ── Quick Guide Overlay ── -->
   {#if showGuide}
-    <div class="guide-backdrop" on:click={() => showGuide = false} on:keydown={e => e.key === 'Escape' && (showGuide = false)} role="presentation"></div>
-    <div class="guide-panel" role="dialog" aria-label="Quick guide">
+    <div class="guide-backdrop" on:click={() => showGuide = false} role="presentation"></div>
+    <div class="guide-panel" role="dialog" aria-label="Quick guide" tabindex="-1" on:keydown={e => e.key === 'Escape' && (showGuide = false)} use:autoFocus>
       <div class="guide-header">
         <h2 class="guide-title">
           <span class="guide-icon">💡</span>

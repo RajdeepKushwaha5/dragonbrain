@@ -465,9 +465,9 @@
     flex-direction: column;
     justify-content: space-between;
     height: 200px;
-    font-size: 0.55rem;
+    font-size: 0.72rem;
     font-family: var(--font-mono);
-    color: var(--text-dim);
+    color: var(--text-secondary);
   }
 
   .synapse-key {
@@ -593,8 +593,8 @@
   }
 
   .pair-index {
-    font-size: 0.6rem;
-    color: var(--text-dim);
+    font-size: 0.68rem;
+    color: var(--text-muted);
     min-width: 1.5em;
   }
 
@@ -646,9 +646,9 @@
   }
 
   .timeline-label {
-    font-size: 0.62rem;
+    font-size: 0.68rem;
     font-family: var(--font-mono);
-    color: var(--text-dim);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     white-space: nowrap;

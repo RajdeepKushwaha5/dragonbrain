@@ -7,10 +7,10 @@
 
   let svgEl;
   const maxT = 32; // Show last 32 tokens
-  const cellSize = 7;
+  const cellSize = 10;
   const gap = 1;
-  const marginLeft = 20;
-  const marginTop = 20;
+  const marginLeft = 28;
+  const marginTop = 28;
 
   const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, 1]);
 
@@ -24,7 +24,7 @@
     const startIdx = Math.max(0, T - maxT);
     const W = marginLeft + dispT * (cellSize + gap);
     const H = marginTop + dispT * (cellSize + gap);
-    svg.attr('width', W).attr('height', H);
+    svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width', null).attr('height', null);
 
     // Extract TxT scores for selected head
     const matrix = [];
@@ -65,8 +65,8 @@
       .attr('x', (_, i) => marginLeft + i * (cellSize + gap) + cellSize / 2)
       .attr('y', marginTop - 4)
       .attr('text-anchor', 'middle')
-      .attr('fill', '#888')
-      .attr('font-size', '5px')
+      .attr('fill', '#aaa')
+      .attr('font-size', '8px')
       .text(b => tokenToChar(b));
 
     // Row labels
@@ -75,11 +75,11 @@
       .enter()
       .append('text')
       .attr('class', 'row-label')
-      .attr('x', marginLeft - 4)
-      .attr('y', (_, i) => marginTop + i * (cellSize + gap) + cellSize / 2 + 2)
+      .attr('x', marginLeft - 5)
+      .attr('y', (_, i) => marginTop + i * (cellSize + gap) + cellSize / 2 + 3)
       .attr('text-anchor', 'end')
-      .attr('fill', '#888')
-      .attr('font-size', '5px')
+      .attr('fill', '#aaa')
+      .attr('font-size', '8px')
       .text(b => tokenToChar(b));
   }
 
@@ -234,7 +234,9 @@
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border-default);
     display: block;
-    max-width: 100%;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
   }
 
   .footnote {

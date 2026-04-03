@@ -570,7 +570,7 @@
 
   .formula {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     display: inline-block;
     margin-left: 0.3rem;

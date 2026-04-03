@@ -802,8 +802,8 @@
 
   .pred-label {
     font-family: var(--font-mono);
-    font-size: 0.76rem;
-    color: var(--text-dim);
+    font-size: 0.78rem;
+    color: var(--text-muted);
     letter-spacing: 0.03em;
     text-transform: uppercase;
     flex-shrink: 0;
@@ -859,18 +859,18 @@
 
   .sigma-indicator {
     font-family: var(--font-mono);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     color: var(--gold);
-    opacity: 0.7;
+    opacity: 0.85;
     margin-left: auto;
   }
 
   .shift-indicator {
     font-family: var(--font-mono);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     color: var(--rose);
     background: rgba(240, 98, 146, 0.08);
-    padding: 0.15rem 0.4rem;
+    padding: 0.15rem 0.45rem;
     border-radius: 999px;
     border: 1px solid rgba(240, 98, 146, 0.2);
     animation: shiftPulse 0.5s ease;
@@ -905,9 +905,9 @@
 
   .gpt-indicator {
     font-family: var(--font-mono);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
     color: var(--violet, #9b7ef0);
-    opacity: 0.6;
+    opacity: 0.85;
     margin-left: auto;
   }
 

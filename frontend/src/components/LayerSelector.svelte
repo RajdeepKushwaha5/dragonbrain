@@ -138,8 +138,8 @@
   }
 
   .stat-label {
-    font-size: 0.72rem;
-    color: var(--text-dim);
+    font-size: 0.74rem;
+    color: var(--text-muted);
   }
 
   .stat-sep {

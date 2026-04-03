@@ -11,7 +11,7 @@
 
   $: sparsityRatio = parseFloat(gptStats.pct) > 0 && parseFloat($sparsityStats.pct) > 0
     ? (parseFloat(gptStats.pct) / parseFloat($sparsityStats.pct)).toFixed(0)
-    : '0';
+    : '—';
 
   $: insightText = $sparsityStats.active > 0 && gptStats.active > 0
     ? `BDH fires <strong>${$sparsityStats.pct}%</strong> of ${$sparsityStats.total} neurons vs GPT's <strong>${gptStats.pct}%</strong> of ${gptStats.total} — same input, real models, ${sparsityRatio}× difference.`

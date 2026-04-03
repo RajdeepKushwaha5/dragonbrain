@@ -5,7 +5,7 @@
   export let label = '';
   export let color = 'var(--accent)';
 
-  $: barWidth = Math.min(100, parseFloat(pct));
+  $: barWidth = Math.min(100, parseFloat(pct) || 0);
 </script>
 
 <div class="stats-bar">

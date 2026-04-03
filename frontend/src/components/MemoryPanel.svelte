@@ -9,8 +9,8 @@
   const CROSSOVER = SIGMA_BYTES / KV_PER_TOKEN; // 4096 tokens
 
   // Chart dimensions
-  const W = 340, H = 150;
-  const pad = { top: 18, right: 20, bottom: 28, left: 50 };
+  const W = 560, H = 240;
+  const pad = { top: 28, right: 36, bottom: 38, left: 58 };
   const plotW = W - pad.left - pad.right;
   const plotH = H - pad.top - pad.bottom;
 
@@ -72,7 +72,7 @@
         stroke="rgba(255,255,255,0.04)"
         stroke-width="0.5"
       />
-      <text x={pad.left - 6} y={yScale(mb * 1048576) + 3} class="axis-label" text-anchor="end">{mb}MB</text>
+      <text x={pad.left - 8} y={yScale(mb * 1048576) + 4} class="axis-label" text-anchor="end">{mb}MB</text>
     {/each}
     {#each xTicks as t}
       <text x={xScale(t)} y={H - 6} class="axis-label" text-anchor="middle">
@@ -88,7 +88,7 @@
       stroke-width="1"
       stroke-dasharray="3,3"
     />
-    <text x={crossoverX} y={pad.top - 4} class="crossover-label" text-anchor="middle">T≈4K ×</text>
+    <text x={crossoverX} y={pad.top - 8} class="crossover-label" text-anchor="middle">T≈4K ×</text>
 
     <!-- σ line (constant blue) -->
     <line
@@ -96,14 +96,14 @@
       x2={W - pad.right} y2={sigmaY}
       stroke="#5b8def" stroke-width="2"
     />
-    <text x={W - pad.right + 3} y={sigmaY + 3} class="line-label sigma-label">σ</text>
+    <text x={W - pad.right + 6} y={sigmaY + 5} class="line-label sigma-label">σ</text>
 
     <!-- KV-cache line (growing red) -->
     <polyline
       points={kvLine}
       fill="none" stroke="var(--rose)" stroke-width="2"
     />
-    <text x={W - pad.right + 3} y={yScale(KV_PER_TOKEN * maxT) + 3} class="line-label kv-label">KV</text>
+    <text x={W - pad.right + 6} y={yScale(KV_PER_TOKEN * maxT) + 5} class="line-label kv-label">KV</text>
 
     <!-- Current token marker -->
     {#if $tokenCount > 0}
@@ -115,13 +115,13 @@
         stroke-dasharray="2,2"
       />
       <!-- σ dot -->
-      <circle cx={cursorX} cy={sigmaY} r="3.5" fill="#5b8def" stroke="#fff" stroke-width="0.5" />
+      <circle cx={cursorX} cy={sigmaY} r="4.5" fill="#5b8def" stroke="#fff" stroke-width="0.8" />
       <!-- KV dot -->
-      <circle cx={cursorX} cy={cursorKvY} r="3.5" fill="var(--rose)" stroke="#fff" stroke-width="0.5" />
+      <circle cx={cursorX} cy={cursorKvY} r="4.5" fill="var(--rose)" stroke="#fff" stroke-width="0.8" />
     {/if}
 
     <!-- Axis label -->
-    <text x={xScale(maxT / 2)} y={H - 1} class="axis-title" text-anchor="middle">tokens processed</text>
+    <text x={xScale(maxT / 2)} y={H - 4} class="axis-title" text-anchor="middle">tokens processed</text>
   </svg>
 
   <div class="stats-row">
@@ -187,33 +187,33 @@
 
   .chart-svg {
     width: 100%;
-    max-width: 360px;
+    max-width: 620px;
     display: block;
     margin: 0 auto;
   }
 
   .axis-label {
     font-family: var(--font-mono);
-    font-size: 7px;
+    font-size: 11px;
     fill: var(--text-dim);
   }
 
   .axis-title {
     font-family: var(--font-mono);
-    font-size: 7px;
+    font-size: 12px;
     fill: var(--text-muted);
   }
 
   .crossover-label {
     font-family: var(--font-mono);
-    font-size: 7px;
+    font-size: 12px;
     fill: var(--gold);
     font-weight: 600;
   }
 
   .line-label {
     font-family: var(--font-mono);
-    font-size: 8px;
+    font-size: 14px;
     font-weight: 700;
   }
 

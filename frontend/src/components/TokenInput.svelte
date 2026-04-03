@@ -201,6 +201,23 @@
     display: flex;
     flex-wrap: wrap;
     gap: 3px;
+    max-height: 5.5rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-hover) transparent;
+  }
+
+  .token-list::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .token-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .token-list::-webkit-scrollbar-thumb {
+    background: var(--border-hover);
+    border-radius: 2px;
   }
 
   .token {

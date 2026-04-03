@@ -19,40 +19,50 @@
 
   // Sparkline drawing
   let sparkCanvas;
-  const SPARK_W = 200, SPARK_H = 32;
+  let sparkContainer;
+  const SPARK_H = 48;
 
   $: if (sparkCanvas && $sparsityHistory.length > 1) {
     drawSparkline($sparsityHistory);
   }
 
   function drawSparkline(history) {
+    // Match canvas resolution to actual displayed size
+    const rect = sparkContainer?.getBoundingClientRect();
+    const w = rect ? Math.round(rect.width * (window.devicePixelRatio || 1)) : 600;
+    const dpr = window.devicePixelRatio || 1;
+    const displayW = rect ? rect.width : 600;
+    sparkCanvas.width = w;
+    sparkCanvas.height = SPARK_H * dpr;
     const ctx = sparkCanvas.getContext('2d');
-    ctx.clearRect(0, 0, SPARK_W, SPARK_H);
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, displayW, SPARK_H);
 
     const pts = history.slice(-60);
     if (pts.length < 2) return;
 
-    const maxPct = Math.max(15, ...pts.map(p => p.pct));
-    const stepX = SPARK_W / (pts.length - 1);
+    const minPct = Math.min(...pts.map(p => p.pct));
+    const maxPct = Math.max(...pts.map(p => p.pct));
+    const range = Math.max(maxPct - minPct, 2); // at least 2% range to show variation
+    const pad = 6;
+    const stepX = displayW / (pts.length - 1);
+
+    const toY = (pct) => pad + (1 - (pct - minPct) / range) * (SPARK_H - pad * 2);
 
     // Fill area
     ctx.beginPath();
     ctx.moveTo(0, SPARK_H);
-    pts.forEach((p, i) => {
-      const y = SPARK_H - (p.pct / maxPct) * (SPARK_H - 4);
-      ctx.lineTo(i * stepX, y);
-    });
+    pts.forEach((p, i) => ctx.lineTo(i * stepX, toY(p.pct)));
     ctx.lineTo((pts.length - 1) * stepX, SPARK_H);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(91, 141, 239, 0.08)';
+    ctx.fillStyle = 'rgba(91, 141, 239, 0.1)';
     ctx.fill();
 
     // Line
     ctx.beginPath();
     pts.forEach((p, i) => {
-      const y = SPARK_H - (p.pct / maxPct) * (SPARK_H - 4);
-      if (i === 0) ctx.moveTo(0, y);
-      else ctx.lineTo(i * stepX, y);
+      if (i === 0) ctx.moveTo(0, toY(p.pct));
+      else ctx.lineTo(i * stepX, toY(p.pct));
     });
     ctx.strokeStyle = '#5b8def';
     ctx.lineWidth = 1.5;
@@ -60,9 +70,8 @@
 
     // Current dot
     const lastPt = pts[pts.length - 1];
-    const lastY = SPARK_H - (lastPt.pct / maxPct) * (SPARK_H - 4);
     ctx.beginPath();
-    ctx.arc((pts.length - 1) * stepX, lastY, 3, 0, Math.PI * 2);
+    ctx.arc((pts.length - 1) * stepX, toY(lastPt.pct), 3, 0, Math.PI * 2);
     ctx.fillStyle = '#7da8f5';
     ctx.fill();
   }
@@ -134,15 +143,13 @@
 
   <!-- Sparsity Sparkline — Novel insight: sparsity tracks uncertainty -->
   {#if $sparsityHistory.length > 2}
-    <div class="sparkline-section">
+    <div class="sparkline-section" bind:this={sparkContainer}>
       <div class="sparkline-header">
         <span class="sparkline-label">Sparsity Over Time</span>
         <span class="sparkline-hint">↑ novel input &nbsp; ↓ predictable text</span>
       </div>
       <canvas
         bind:this={sparkCanvas}
-        width={SPARK_W}
-        height={SPARK_H}
         class="sparkline-canvas"
         aria-label="Sparsity trend over keystrokes"
       ></canvas>
@@ -274,7 +281,7 @@
 
   .sparkline-canvas {
     width: 100%;
-    height: 32px;
+    height: 48px;
     border-radius: var(--radius-sm);
     background: var(--bg-secondary);
   }

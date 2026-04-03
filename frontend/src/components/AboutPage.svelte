@@ -3,6 +3,7 @@
   const dispatch = createEventDispatcher();
 
   const tocItems = [
+    { id: 'glossary', label: 'Glossary' },
     { id: 'what', label: 'What is this?' },
     { id: 'why', label: 'Why BDH?' },
     { id: 'pillars', label: '5 Pillars' },
@@ -50,6 +51,60 @@
       {/each}
     </div>
   </nav>
+
+  <!-- ── Section 0: Glossary ── -->
+  <section class="section glossary-section" id="glossary">
+    <h2><span class="section-num">00</span> Quick Reference — All Terms</h2>
+    <div class="glossary-scroll">
+      <table class="glossary-table">
+        <thead>
+          <tr><th>Term</th><th>Full Form / Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>BDH</strong></td><td>Baby Dragon Hatchling — the novel neural architecture</td></tr>
+          <tr><td><strong>GPT</strong></td><td>Generative Pre-trained Transformer — the standard baseline</td></tr>
+          <tr><td><strong>σ (sigma)</strong></td><td>Hebbian co-activation memory matrix — fixed-size, named after Greek letter sigma</td></tr>
+          <tr><td><strong>Δσ (delta sigma)</strong></td><td>Change in σ per token — how many synapses strengthened and by how much</td></tr>
+          <tr><td><strong>ReLU</strong></td><td>Rectified Linear Unit — <code>max(0, x)</code> — outputs zero for negatives → sparse activations</td></tr>
+          <tr><td><strong>GELU</strong></td><td>Gaussian Error Linear Unit — smooth activation used in GPT → nearly all neurons fire</td></tr>
+          <tr><td><strong>RoPE</strong></td><td>Rotary Position Embedding — encodes relative token position via rotation instead of adding position vectors</td></tr>
+          <tr><td><strong>Gx</strong></td><td><code>Encoder × Decoder_x</code> — feedforward causal circuit, called "Thought Flow"</td></tr>
+          <tr><td><strong>Gy</strong></td><td><code>Decoder_y<sup>T</sup> × Decoder_x</code> — Hebbian memory readout graph, called "Memory Echo"</td></tr>
+          <tr><td><strong>KV-cache</strong></td><td>Key-Value cache — stores past keys and values in Transformers, grows by ~1 KB per token</td></tr>
+          <tr><td><strong>Q, K, V</strong></td><td>Query, Key, Value — the three projections in attention. In BDH: Q = K = x (no separate projections)</td></tr>
+          <tr><td><strong>ONNX</strong></td><td>Open Neural Network Exchange — model format for cross-platform inference</td></tr>
+          <tr><td><strong>WASM</strong></td><td>WebAssembly — binary instruction format that lets native code run in browsers</td></tr>
+          <tr><td><strong>T</strong></td><td>Token count / sequence length</td></tr>
+          <tr><td><strong>N</strong></td><td>Neuron count per attention head (512 in this model, 1024 total across 2 heads)</td></tr>
+          <tr><td><strong>D</strong></td><td>Embedding dimension (64 in this model)</td></tr>
+          <tr><td><strong>D<sub>x</sub> (Decoder_x)</strong></td><td>Weight matrix that projects embedding v* into sparse neuron space x</td></tr>
+          <tr><td><strong>D<sub>y</sub> (Decoder_y)</strong></td><td>Weight matrix that projects attention output into gated readout y</td></tr>
+          <tr><td><strong>Encoder</strong></td><td>Weight matrix that projects y back to embedding dimension — shared across all layers</td></tr>
+          <tr><td><strong>SAE</strong></td><td>Sparse AutoEncoder — post-hoc tool Transformers need for interpretability; BDH doesn't need this</td></tr>
+          <tr><td><strong>Monosemantic</strong></td><td>One neuron = one concept. BDH gets this naturally via sparsity; Transformers are polysemantic</td></tr>
+          <tr><td><strong>Scale-free network</strong></td><td>A graph where a few "hub" nodes have many connections and most have few — follows a power law</td></tr>
+          <tr><td><strong>Outer product</strong></td><td>y ⊗ x — element (i,j) = y[i] × x[j]. This is how σ records which neurons co-activated</td></tr>
+          <tr><td><strong>Causal mask</strong></td><td>Enforces that token at position t can only attend to tokens 0…t−1, never future tokens</td></tr>
+          <tr><td><strong>Softmax</strong></td><td>Converts raw scores into probabilities summing to 1. Used in Transformer attention; BDH does not use it</td></tr>
+          <tr><td><strong>O(T²)</strong></td><td>Quadratic complexity — grows with the square of sequence length (standard attention)</td></tr>
+          <tr><td><strong>O(T)</strong></td><td>Linear complexity — grows proportionally to sequence length (BDH's recurrent form)</td></tr>
+          <tr><td><strong>O(1)</strong></td><td>Constant — doesn't grow with input (σ memory size)</td></tr>
+          <tr><td><strong>α (alpha)</strong></td><td>Blending coefficient for σ-Learned: α = 0.01 × log(1 + T) — grows logarithmically</td></tr>
+          <tr><td><strong>D3.js</strong></td><td>Data-Driven Documents — JavaScript library for interactive visualizations</td></tr>
+          <tr><td><strong>Hub neurons</strong></td><td>Neurons with many connections in the emergent graph — organizational centers</td></tr>
+          <tr><td><strong>Excitatory edge</strong></td><td>Connection where one neuron amplifies another's signal (positive weight)</td></tr>
+          <tr><td><strong>Inhibitory edge</strong></td><td>Connection where one neuron suppresses another's signal (negative weight)</td></tr>
+          <tr><td><strong>Synapse</strong></td><td>Connection between two neurons. σ(i,j) records how strongly neurons i and j co-activate</td></tr>
+          <tr><td><strong>Viridis</strong></td><td>Perceptually-uniform color scale (dark → green → yellow) used for the Hebbian heatmap</td></tr>
+          <tr><td><strong>Byte token</strong></td><td>Character encoded as raw byte value (0–255). 'A' = 65, 'a' = 97, space = 32</td></tr>
+          <tr><td><strong>Inference</strong></td><td>Running a trained model on new input to get predictions (vs training)</td></tr>
+          <tr><td><strong>Inference-time learning</strong></td><td>BDH's ability to learn (update σ) during inference, without retraining or gradients</td></tr>
+          <tr><td><strong>IIT Ropar</strong></td><td>Indian Institute of Technology Ropar</td></tr>
+          <tr><td><strong>Pathway</strong></td><td>The company behind the BDH research (pathway.com)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
   <!-- ── Section 1: What is this project? ── -->
   <section class="section" id="what">
@@ -788,6 +843,64 @@
   .section {
     margin-bottom: 4rem;
     scroll-margin-top: 2rem;
+  }
+
+  /* ── Glossary Table ── */
+  .glossary-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .glossary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .glossary-table thead tr {
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .glossary-table th {
+    text-align: left;
+    padding: 0.55rem 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .glossary-table th:first-child {
+    width: 22%;
+    min-width: 140px;
+  }
+
+  .glossary-table td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .glossary-table td:first-child {
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .glossary-table tbody tr:hover {
+    background: rgba(91, 141, 239, 0.04);
+  }
+
+  .glossary-table code {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    background: rgba(91, 141, 239, 0.1);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    color: var(--accent);
   }
 
   .section h2 {

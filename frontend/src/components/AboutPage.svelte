@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   const dispatch = createEventDispatcher();
 
   const tocItems = [
@@ -15,9 +15,71 @@
     { id: 'usage', label: 'How to Use' },
     { id: 'refs', label: 'References' },
   ];
+
+  let activeSection = 'glossary';
+  let sidebarOpen = false;
+  let observer;
+
+  function handleNavClick(id) {
+    activeSection = id;
+    sidebarOpen = false;
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  onMount(() => {
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            activeSection = entry.target.id;
+          }
+        }
+      },
+      { rootMargin: '-10% 0px -70% 0px', threshold: 0 }
+    );
+    for (const item of tocItems) {
+      const el = document.getElementById(item.id);
+      if (el) observer.observe(el);
+    }
+  });
+
+  onDestroy(() => {
+    if (observer) observer.disconnect();
+  });
 </script>
 
-<div class="about">
+<div class="about-layout">
+  <!-- ── Sidebar Navigation ── -->
+  <button class="sidebar-toggle" on:click={() => sidebarOpen = !sidebarOpen} aria-label="Toggle navigation">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      {#if sidebarOpen}
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      {:else}
+        <line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/>
+      {/if}
+    </svg>
+  </button>
+
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  {#if sidebarOpen}
+    <div class="sidebar-backdrop" on:click={() => sidebarOpen = false}></div>
+  {/if}
+
+  <nav class="sidebar" class:open={sidebarOpen} aria-label="Table of contents">
+    <span class="sidebar-label">Contents</span>
+    {#each tocItems as item}
+      <button
+        class="sidebar-link"
+        class:active={activeSection === item.id}
+        on:click={() => handleNavClick(item.id)}
+      >
+        {item.label}
+      </button>
+    {/each}
+  </nav>
+
+  <div class="about">
   <!-- ── Back Button ── -->
   <button class="back-btn" on:click={() => dispatch('back')} aria-label="Back to visualizer">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -41,16 +103,6 @@
       <span class="hero-author">Kosowski et al. 2025</span>
     </div>
   </header>
-
-  <!-- ── Table of Contents ── -->
-  <nav class="toc" aria-label="Table of contents">
-    <span class="toc-label">Contents</span>
-    <div class="toc-items">
-      {#each tocItems as item}
-        <a href="#{item.id}" class="toc-link">{item.label}</a>
-      {/each}
-    </div>
-  </nav>
 
   <!-- ── Section 0: Glossary ── -->
   <section class="section glossary-section" id="glossary">
@@ -672,13 +724,108 @@
     </div>
   </section>
 </div>
+</div>
 
 <style>
+  /* ── Layout ── */
+  .about-layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
   .about {
     max-width: 780px;
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
     animation: fadeIn 0.35s ease;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 200px;
+    flex-shrink: 0;
+    padding: 1.5rem 0.6rem 2rem 1rem;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+    z-index: 50;
+  }
+
+  .sidebar-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    padding: 0.5rem 0.65rem 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .sidebar-link {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-left: 2px solid transparent;
+    padding: 0.45rem 0.65rem;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-link:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .sidebar-link.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(91,141,239,0.08);
+    font-weight: 600;
+  }
+
+  .sidebar-toggle {
+    display: none;
+    position: fixed;
+    bottom: 1.25rem;
+    left: 1.25rem;
+    z-index: 60;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(91,141,239,0.4);
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+  }
+
+  .sidebar-toggle:hover { transform: scale(1.08); }
+
+  .sidebar-backdrop {
+    display: none;
   }
 
   /* ── Back Button ── */
@@ -782,62 +929,6 @@
   }
 
   .hide-mobile { display: inline; }
-
-  /* ── Table of Contents ── */
-  .toc {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 1rem 1.2rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    margin-bottom: 3rem;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-  }
-
-  .toc::-webkit-scrollbar { height: 5px; }
-  .toc::-webkit-scrollbar-track { background: transparent; margin: 0 0.8rem; }
-  .toc::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: var(--radius-full);
-  }
-  .toc::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-
-  .toc-label {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    flex-shrink: 0;
-  }
-
-  .toc-items {
-    display: flex;
-    gap: 0.25rem;
-    flex-wrap: nowrap;
-  }
-
-  .toc-link {
-    font-size: 0.84rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    padding: 0.35rem 0.7rem;
-    border-radius: var(--radius-sm);
-    white-space: nowrap;
-    transition: all var(--transition-fast);
-  }
-
-  .toc-link:hover {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.06);
-  }
 
   /* ── Sections ── */
   .section {
@@ -1557,6 +1648,28 @@
   }
 
   /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      border-right: 1px solid var(--border-default);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-toggle { display: flex; }
+    .sidebar-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 49;
+    }
+  }
+
   @media (max-width: 768px) {
     .about { padding: 1.5rem 1rem 3rem; }
     .hero-title { font-size: 2rem; }
@@ -1568,7 +1681,6 @@
     .pillar-grid { grid-template-columns: 1fr; }
     .problem-grid { grid-template-columns: 1fr; }
     .ref-grid { grid-template-columns: 1fr; }
-    .toc-items { gap: 0; }
     .guide-mode { flex-direction: column; gap: 0.3rem; align-items: flex-start; }
   }
 

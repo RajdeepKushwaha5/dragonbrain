@@ -389,6 +389,39 @@
           what you see are raw dot products with RoPE position encoding. Brighter cells near the diagonal = recent focus.
         </div>
       </div>
+
+      <div class="guide-card guide-violet">
+        <div class="guide-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/></svg>
+          <h3>Memory Scaling Panel</h3>
+        </div>
+        <p>
+          An SVG chart comparing BDH's constant σ memory (flat blue line at 4 MB) against a GPT KV-cache
+          (pink line growing at ~1 KB per token). The two lines cross at T≈4,096 — after which a transformer
+          uses more memory than BDH for the same context length.
+        </p>
+        <div class="guide-tip">
+          <strong>Tip:</strong> At the paper's full scale (N=32,768), the crossover happens at just T≈400 tokens.
+          The dots on each line track the current token count as you type.
+        </div>
+      </div>
+
+      <div class="guide-card guide-gold">
+        <div class="guide-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <h3>Prediction Bar</h3>
+        </div>
+        <p>
+          Three rows of next-character predictions appear below the input. <strong>BDH Raw</strong> shows the
+          model's base output. <strong>σ-Learned</strong> adds a correction from accumulated Hebbian memory —
+          when σ is strong enough to change the top prediction, a <em>⇄ shifted</em> indicator appears.
+          <strong>GPT</strong> shows a standard transformer's prediction as a baseline.
+        </p>
+        <div class="guide-tip">
+          <strong>Tip:</strong> Use Teach mode (the ✏ button) to build up σ quickly. After 3 repetitions of
+          "the cat sat on the mat", the σ-Learned row will visibly shift predictions toward the learned pattern.
+        </div>
+      </div>
     </div>
   </section>
 
@@ -478,6 +511,26 @@
           This accumulates a long-term memory that <strong>doesn't grow</strong> with context length.
         </p>
       </div>
+
+      <div class="concept concept-violet">
+        <h3>Inference-Time Learning</h3>
+        <p>
+          Unlike standard transformers whose weights are frozen at inference, BDH keeps learning through σ.
+          This visualizer demonstrates it with the σ-Learned prediction row:
+        </p>
+        <div class="formula formula-sm">
+          <span class="formula-label">α</span>
+          <code>α = 0.01 &times; log(1 + T)</code>
+        </div>
+        <div class="formula formula-sm">
+          <span class="formula-label">blend</span>
+          <code>logits′ = logits + α &times; σ·logits</code>
+        </div>
+        <p>
+          As σ accumulates more context, the correction grows logarithmically. No gradient updates needed —
+          the model adapts purely through co-activation memory. Try Teach mode to see this in action.
+        </p>
+      </div>
     </div>
   </section>
 
@@ -494,6 +547,11 @@
         attention pattern, and active graph nodes all respond instantly.
       </li>
       <li>
+        <strong>Read the predictions</strong> — three rows appear below the input: <em>BDH Raw</em> (base output),
+        <em>σ-Learned</em> (Hebbian-corrected), and <em>GPT</em> (transformer baseline). When σ shifts the
+        top prediction, a <em>⇄ shifted</em> indicator appears.
+      </li>
+      <li>
         <strong>Switch layers and heads</strong> using L1/L2 and H1/H2 buttons. Different heads often specialize
         in different patterns.
       </li>
@@ -504,6 +562,14 @@
       <li>
         <strong>Clear memory</strong> with the Clear button on the Hebbian panel, then retype to watch σ rebuild
         from scratch.
+      </li>
+      <li>
+        <strong>Try Demo mode</strong> — click the ▶ button in the header to watch a Shakespeare passage type
+        itself automatically while all panels animate.
+      </li>
+      <li>
+        <strong>Try Teach mode</strong> — click the ✏ button to feed a repeated phrase (e.g. "the cat sat on the mat")
+        three times. After a few repetitions, the σ-Learned predictions begin to shift toward the taught pattern.
       </li>
     </ol>
   </section>
@@ -1137,6 +1203,8 @@
   .guide-gold:hover { border-color: rgba(240, 194, 70, 0.3); border-left-color: var(--gold); }
   .guide-rose { border-left-color: var(--rose); }
   .guide-rose:hover { border-color: rgba(240, 98, 146, 0.3); border-left-color: var(--rose); }
+  .guide-violet { border-left-color: var(--violet, #9b7ef0); }
+  .guide-violet:hover { border-color: rgba(155, 126, 240, 0.3); border-left-color: var(--violet, #9b7ef0); }
 
   .guide-header {
     display: flex;
@@ -1149,6 +1217,7 @@
   .guide-green .guide-header { color: var(--green); }
   .guide-gold .guide-header { color: var(--gold); }
   .guide-rose .guide-header { color: var(--rose); }
+  .guide-violet .guide-header { color: var(--violet, #9b7ef0); }
 
   .guide-card h3 {
     font-size: 1.08rem;
@@ -1259,6 +1328,8 @@
   .concept-green:hover { border-color: rgba(61, 214, 140, 0.3); border-left-color: var(--green); }
   .concept-gold { border-left-color: var(--gold); }
   .concept-gold:hover { border-color: rgba(240, 194, 70, 0.3); border-left-color: var(--gold); }
+  .concept-violet { border-left-color: var(--violet, #9b7ef0); }
+  .concept-violet:hover { border-color: rgba(155, 126, 240, 0.3); border-left-color: var(--violet, #9b7ef0); }
 
   .concept h3 {
     font-size: 1.08rem;

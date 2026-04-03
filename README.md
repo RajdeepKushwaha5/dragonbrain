@@ -57,7 +57,8 @@ The **Baby Dragon Hatchling** (Kosowski et al. 2025) is a novel neural architect
 | 2 | **Native sparsity** | Real GPT ONNX model runs side-by-side — ~97% density vs BDH's ~5–15% |
 | 3 | **Monosemantic synapses** | Concept-labeled synapse borders on the Hebbian heatmap (currency, nouns, punctuation) |
 | 4 | **Inference-time learning** | Δσ indicator + sparsity sparkline showing live Hebbian updates per keystroke |
-| 5 | **Composable merging** | Explained in the About page (Section 7.1 of the paper — requires separate training) |
+| 5 | **σ-Learned predictions** | Three prediction rows (BDH Raw / σ-Learned / GPT) — ⇄ shifted indicator when σ changes the top prediction |
+| 6 | **Composable merging** | Explained in the About page (Section 7.1 of the paper — requires separate training) |
 
 ---
 
@@ -82,12 +83,15 @@ The **Baby Dragon Hatchling** (Kosowski et al. 2025) is a novel neural architect
 ### Additional Features
 
 - **Real GPT comparison** — a separately trained GPT transformer runs in the same browser via ONNX
-- **Next-token predictions** — top-5 predicted next bytes with probabilities
+- **Three prediction rows** — BDH Raw, σ-Learned (Hebbian-corrected), and GPT predictions with ⇄ shifted indicator
+- **Demo mode** — one-click Shakespeare auto-typing with all panels animating in sync
+- **Teach mode** — feed repeated phrases to build σ memory and watch predictions shift toward learned patterns
 - **Inference timer** — per-token latency in milliseconds
 - **Sparsity-as-uncertainty sparkline** — novel insight: BDH activation density correlates with input novelty (Section 6.4)
 - **Graph evolution** — random init vs trained topology with stats (max degree, avg degree, edge count)
-- **Quick Guide** — overlay tutorial accessible from header
-- **About page** — deep-dive with formulas, all 5 BDH pillars, architecture step-by-step
+- **Side-by-side token view** — input text and byte tokens displayed together with full token visibility
+- **Quick Guide** — 7-step overlay tutorial covering all features including Teach mode and predictions
+- **About page** — deep-dive with formulas, all 5 BDH pillars, architecture step-by-step, key concepts
 - **Layer & head switching** — L1/L2, H1/H2 exploration
 - **Fully client-side** — zero server calls, ONNX Runtime WebAssembly
 - **Byte-level tokenization** — every character visible (0–255)
@@ -280,12 +284,15 @@ The `vercel.json` configures build commands, COOP/COEP headers (required for ONN
 
 ## How It Works
 
-1. **Type text** — each character becomes a byte token (0–255)
+1. **Type text** — each character becomes a byte token (0–255), shown side-by-side with the input
 2. **Both models run** — BDH and GPT process the same tokens via ONNX in parallel
-3. **5 panels update** — sparse grids, graph highlights, Hebbian heatmap, memory chart, attention
-4. **Switch layers/heads** — L1/L2 and H1/H2 show different model internals
-5. **Watch the graph evolve** — toggle Evolution to compare random init vs trained topology
-6. **Clear memory** — reset σ, then retype to watch Hebbian memory rebuild in real time
+3. **Read predictions** — three rows: BDH Raw, σ-Learned (Hebbian-corrected), and GPT. A ⇄ shifted indicator appears when σ changes the top prediction
+4. **5 panels update** — sparse grids, graph highlights, Hebbian heatmap, memory chart, attention
+5. **Switch layers/heads** — L1/L2 and H1/H2 show different model internals
+6. **Watch the graph evolve** — toggle Evolution to compare random init vs trained topology
+7. **Clear memory** — reset σ, then retype to watch Hebbian memory rebuild in real time
+8. **Demo mode** — click ▶ for auto-typing Shakespeare with all panels animating
+9. **Teach mode** — click ✏ to feed repeated phrases and watch σ-Learned predictions shift
 
 ---
 

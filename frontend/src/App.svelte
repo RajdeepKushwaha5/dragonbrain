@@ -317,11 +317,13 @@
         </button>
       </div>
       <ol class="guide-steps">
-        <li><strong>Type text</strong> in the input box. The model processes each character as a byte token (0–255).</li>
+        <li><strong>Type text</strong> in the input box. The model processes each character as a byte token (0–255). Byte tokens appear on the right.</li>
         <li><strong>Watch the panels</strong> update in real time — sparse activation grid, Hebbian heatmap, attention pattern, and active graph nodes all respond instantly.</li>
+        <li><strong>Read the predictions</strong> — three rows appear below the input: <em>BDH Raw</em> (base model output), <em>σ-Learned</em> (adjusted by Hebbian memory — watch for ⇄ shift indicators), and <em>GPT</em> (transformer baseline comparison).</li>
         <li><strong>Switch layers and heads</strong> using L1/L2 and H1/H2 buttons. Different heads often specialize in different patterns.</li>
         <li><strong>Explore the graph</strong> — switch between Gx (Thought Flow) and Gy (Memory Echo). Drag and zoom to inspect hub neurons.</li>
         <li><strong>Clear memory</strong> with the Clear button on the Hebbian panel, then retype to watch σ rebuild from scratch.</li>
+        <li><strong>Try Teach mode</strong> — click the Teach button in the header. The model sees "the cat sat on the mat" three times, building σ memory. Then watch σ-Learned predictions shift toward "mat" — the model learned the pattern with no gradient updates.</li>
       </ol>
     </div>
   {/if}

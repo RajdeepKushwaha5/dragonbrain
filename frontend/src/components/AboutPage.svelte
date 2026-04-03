@@ -736,7 +736,7 @@
   .about {
     max-width: 780px;
     margin: 0 auto;
-    padding: 2rem 1.5rem 4rem;
+    padding: 1.2rem 1.5rem 3rem;
     animation: fadeIn 0.35s ease;
     flex: 1;
     min-width: 0;
@@ -843,7 +843,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-base);
-    margin-bottom: 2.5rem;
+    margin-bottom: 1rem;
   }
 
   .back-btn:hover {
@@ -856,8 +856,8 @@
   /* ── Hero ── */
   .hero {
     text-align: center;
-    padding: 3rem 0 3rem;
-    margin-bottom: 2.5rem;
+    padding: 1.5rem 0 1.5rem;
+    margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--border-subtle);
   }
 
@@ -873,17 +873,17 @@
     border: 1px solid rgba(91, 141, 239, 0.2);
     border-radius: var(--radius-full);
     padding: 0.35rem 1.1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.8rem;
   }
 
   .hero-title {
     font-family: var(--font-sans);
-    font-size: 2.8rem;
+    font-size: 2.2rem;
     font-weight: 800;
     color: var(--text-primary);
     letter-spacing: -0.03em;
     line-height: 1.15;
-    margin-bottom: 1.2rem;
+    margin-bottom: 0.8rem;
   }
 
   .hero-gradient {
@@ -894,11 +894,11 @@
   }
 
   .hero-subtitle {
-    font-size: 1.12rem;
+    font-size: 1.02rem;
     color: var(--text-secondary);
-    line-height: 1.8;
+    line-height: 1.7;
     max-width: 560px;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 0.8rem;
   }
 
   .hero-meta {
@@ -932,8 +932,8 @@
 
   /* ── Sections ── */
   .section {
-    margin-bottom: 4rem;
-    scroll-margin-top: 2rem;
+    margin-bottom: 2.5rem;
+    scroll-margin-top: 1rem;
   }
 
   /* ── Glossary Table ── */

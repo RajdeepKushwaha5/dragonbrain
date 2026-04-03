@@ -18,7 +18,7 @@
   function handleInput() {
     inputText.set(textValue);
     const bytes = tokenize(textValue);
-    const tail = Array.from(bytes.slice(-128));
+    const tail = Array.from(bytes);
     tokenBuffer.set(tail);
     dispatch('input', { text: textValue, tokens: tail });
   }
@@ -30,7 +30,7 @@
     }
   }
 
-  $: visibleTokens = $tokenBuffer.slice(-40);
+  $: visibleTokens = $tokenBuffer;
   $: byteCount = textValue ? tokenize(textValue).length : 0;
 </script>
 
@@ -53,36 +53,40 @@
     </div>
   </div>
 
-  <div class="input-wrap" class:has-focus={false}>
-    <textarea
-      id="text-input"
-      bind:value={textValue}
-      on:input={handleInput}
-      on:keydown={handleKeydown}
-      placeholder="Type text to explore BDH internals — e.g. The dollar rose against the euro..."
-      rows="2"
-      spellcheck="false"
-      aria-label="Input text for BDH inference"
-    ></textarea>
-  </div>
+  <div class="input-body">
+    <div class="input-left">
+      <textarea
+        id="text-input"
+        bind:value={textValue}
+        on:input={handleInput}
+        on:keydown={handleKeydown}
+        placeholder="Type text to explore BDH internals — e.g. The dollar rose against the euro..."
+        rows="3"
+        spellcheck="false"
+        aria-label="Input text for BDH inference"
+      ></textarea>
+    </div>
 
-  {#if visibleTokens.length > 0}
-    <div class="token-stream">
-      <span class="token-label">Byte tokens</span>
-      <div class="token-list">
-        {#each visibleTokens as byte, i}
-          <span class="token" title="byte {byte} (0x{byte.toString(16).padStart(2, '0')})">
-            {tokenToChar(byte)}
-          </span>
-        {/each}
-      </div>
+    <div class="input-right">
+      {#if visibleTokens.length > 0}
+        <div class="token-stream">
+          <span class="token-label">Byte tokens</span>
+          <div class="token-list">
+            {#each visibleTokens as byte, i}
+              <span class="token" title="byte {byte} (0x{byte.toString(16).padStart(2, '0')})">
+                {tokenToChar(byte)}
+              </span>
+            {/each}
+          </div>
+        </div>
+      {:else}
+        <div class="token-empty">
+          <span class="token-label">Byte tokens</span>
+          <span class="empty-hint">Type something to see byte-level tokenization…</span>
+        </div>
+      {/if}
     </div>
-  {:else}
-    <div class="token-empty">
-      <span class="token-label">Byte tokens</span>
-      <span class="empty-hint">Type something to see byte-level tokenization…</span>
-    </div>
-  {/if}
+  </div>
 </div>
 
 <style>
@@ -154,8 +158,26 @@
     animation: spin 1s linear infinite;
   }
 
+  .input-body {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .input-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .input-right {
+    flex: 1;
+    min-width: 0;
+  }
+
   textarea {
     width: 100%;
+    height: 100%;
+    min-height: 5.5rem;
     padding: 0.75rem 1rem;
     background: var(--bg-input);
     border: 1px solid var(--border-default);
@@ -166,6 +188,7 @@
     line-height: 1.6;
     resize: vertical;
     outline: none;
+    box-sizing: border-box;
     transition: border-color var(--transition-base), box-shadow var(--transition-base);
   }
 
@@ -180,11 +203,14 @@
   }
 
   .token-stream, .token-empty {
-    margin-top: 0.6rem;
     padding: 0.5rem 0.7rem;
     background: rgba(255, 255, 255, 0.025);
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-subtle);
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
   }
 
   .token-label {
@@ -195,13 +221,14 @@
     letter-spacing: 0.08em;
     display: block;
     margin-bottom: 0.3rem;
+    flex-shrink: 0;
   }
 
   .token-list {
     display: flex;
     flex-wrap: wrap;
     gap: 3px;
-    max-height: 5.5rem;
+    flex: 1;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--border-hover) transparent;
@@ -242,13 +269,23 @@
     font-style: italic;
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 640px) {
+    .input-body {
+      flex-direction: column;
+    }
+
     .input-card {
       padding: 0.8rem;
     }
 
     textarea {
       font-size: 0.85rem;
+      min-height: auto;
+    }
+
+    .token-stream, .token-empty {
+      height: auto;
+      max-height: 6rem;
     }
   }
 </style>

@@ -171,10 +171,10 @@
       const prevSigma = model.getSigma($selectedLayer, $selectedHead).slice();
 
       const layer = result.layers[0];
-      model.updateSigma(layer.x_last, layer.xy_last, 0);
+      model.updateSigma(layer.x_last, layer.y_last, 0);
 
       if (result.layers.length > 1) {
-        model.updateSigma(result.layers[1].x_last, result.layers[1].xy_last, 1);
+        model.updateSigma(result.layers[1].x_last, result.layers[1].y_last, 1);
       }
 
       totalTokens++;

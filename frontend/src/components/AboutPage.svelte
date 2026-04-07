@@ -133,7 +133,7 @@
             <tr><td><strong>O(T&sup2;)</strong></td><td>Quadratic complexity — grows with the square of sequence length (standard attention)</td></tr>
             <tr><td><strong>O(T)</strong></td><td>Linear complexity — grows proportionally to sequence length (BDH's recurrent form)</td></tr>
             <tr><td><strong>O(1)</strong></td><td>Constant — doesn't grow with input (&sigma; memory size)</td></tr>
-            <tr><td><strong>&alpha; (alpha)</strong></td><td>Blending coefficient for &sigma;-Learned: &alpha; = 0.01 &times; log(1 + T) — grows logarithmically</td></tr>
+            <tr><td><strong>&alpha; (alpha)</strong></td><td>Blending coefficient for &sigma;-Learned: &alpha; = 0.05 &times; log(1 + T) — grows logarithmically</td></tr>
             <tr><td><strong>D3.js</strong></td><td>Data-Driven Documents — JavaScript library for interactive visualizations</td></tr>
             <tr><td><strong>Hub neurons</strong></td><td>Neurons with many connections in the emergent graph — organizational centers</td></tr>
             <tr><td><strong>Excitatory edge</strong></td><td>Connection where one neuron amplifies another's signal (positive weight)</td></tr>
@@ -472,12 +472,19 @@
         through co-activation memory.
       </p>
       <div class="formula">
-        <code>&alpha; = 0.01 &times; log(1 + T)</code>
+        <code>&alpha; = 0.05 &times; log(1 + T)</code>
       </div>
       <div class="formula">
-        <code>logits&prime; = logits + &alpha; &times; &sigma;&middot;logits</code>
+        <code>a* = ReLU(&sigma; &middot; x)</code>
       </div>
-      <p>Try Teach mode to see this in action.</p>
+      <div class="formula">
+        <code>logits&prime; = logits + &alpha; &times; scale &times; (E<sup>T</sup> &middot; a*) &middot; W<sub>lm</sub></code>
+      </div>
+      <p>
+        The correction flows through the same encoder and language-model head used in training.
+        <code>scale</code> normalizes &sigma;-logits to the same range as raw logits so they blend cleanly.
+        Try Teach mode to see this in action.
+      </p>
     </section>
 
     <section class="section" id="usage">

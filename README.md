@@ -159,8 +159,9 @@ dragonbrain/
 │   │       ├── graph_evolution.json # Random init vs trained snapshots
 │   │       └── synapse_labels.json  # Concept-specific synapse labels
 │   ├── public/
-│   │   ├── model.onnx + .data       # Trained BDH weights (~0.9 MB)
-│   │   ├── transformer.onnx + .data # Trained GPT weights (~0.9 MB)
+│   │   ├── model.onnx               # Trained BDH weights (~0.9 MB, self-contained)
+│   │   ├── transformer.onnx         # Trained GPT weights (~1.1 MB, self-contained)
+│   │   ├── bdh_weights.bin          # Encoder + lm_head for σ-modulated inference
 │   │   └── .nojekyll
 │   └── package.json
 │
@@ -171,8 +172,9 @@ dragonbrain/
 │   ├── train_gpt_tiny.py      # GPT training (matched hyperparams)
 │   ├── extract.py             # Gx/Gy graph topology extraction
 │   ├── extract_evolution.py   # Graph evolution snapshots
-│   ├── export_onnx.py         # BDH ONNX export
-│   ├── export_gpt_onnx.py     # GPT ONNX export
+│   ├── export_onnx.py         # BDH ONNX export (self-contained)
+│   ├── export_gpt_onnx.py     # GPT ONNX export (self-contained)
+│   ├── extract_weights.py     # Extract encoder/lm_head for σ inference
 │   ├── identify_synapses.py   # Concept-specific synapse identification
 │   └── requirements.txt
 │
@@ -192,7 +194,7 @@ npm install
 npm run dev
 ```
 
-Opens at `http://localhost:5173`. The app runs in **mock mode** if no ONNX model is present.
+Opens at `http://localhost:5173`.
 
 ### Training Both Models
 
@@ -206,9 +208,12 @@ python train_tiny.py              # ~5000 iters, best val loss 1.5311
 # Train GPT baseline (same data, same hyperparams)
 python train_gpt_tiny.py          # ~5000 iters, val loss ~1.648
 
-# Export both to ONNX
+# Export both to ONNX (self-contained, no .data files)
 python export_onnx.py --output ../frontend/public/model.onnx
 python export_gpt_onnx.py
+
+# Extract weights for σ-modulated inference
+python extract_weights.py
 
 # Extract graph data
 python extract.py
@@ -300,7 +305,7 @@ The `vercel.json` configures build commands, COOP/COEP headers (required for ONN
 
 ### Current Limitations
 
-- **Model scale:** 229K parameters is too small for BDH to fully exhibit paper-scale properties (the paper uses models with millions of parameters). Sparsity is ~5–15% rather than the reported ~5%.
+- **Model scale:** 229K parameters is too small for BDH to fully exhibit paper-scale properties (the paper uses models with millions of parameters). Sparsity may be higher than the reported ~5% at full scale.
 - **Memory chart is theoretical:** The Memory Scaling panel computes σ size and KV-cache growth from known constants — it doesn't measure actual GPU/browser memory usage.
 - **Composable merging is explained, not demonstrated:** True model merging requires separately training two domain-specific models and concatenating them. This is documented in the About page but not implemented as a live demo.
 - **No long-context demo:** The model's block size is 256 tokens. Demonstrating BDH's infinite context advantage requires larger models and longer sequences.

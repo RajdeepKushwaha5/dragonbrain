@@ -4,10 +4,14 @@ frontend/node_modules/
 # Build output
 frontend/dist/
 
+# Vite cache
+.vite/
+
 # Python
 model/__pycache__/
 model/**/*.pt
 model/*.onnx
+model/venv/
 model/data/
 model/checkpoints/
 model/venv/

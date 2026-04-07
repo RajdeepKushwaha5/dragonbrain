@@ -98,6 +98,10 @@ The **Baby Dragon Hatchling** (Kosowski et al. 2025) is a novel neural architect
 - **Responsive design** — works on desktop and tablet
 
 ---
+<img width="1795" height="645" alt="image" src="https://github.com/user-attachments/assets/34275c00-4761-4a26-b44d-63688f229414" />
+<img width="1847" height="975" alt="image" src="https://github.com/user-attachments/assets/4f73c726-77ed-4a83-b6a3-178bc9dae66f" />
+<img width="1870" height="974" alt="image" src="https://github.com/user-attachments/assets/012e690d-421e-470d-9d51-b400775e72ae" />
+<img width="1782" height="522" alt="image" src="https://github.com/user-attachments/assets/19a61fa4-5c5a-4f06-b49c-b8073b40e13b" />
 
 ## Architecture
 

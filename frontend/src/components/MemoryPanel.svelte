@@ -54,7 +54,6 @@
 <div class="panel">
   <div class="panel-header">
     <h3 class="panel-title">
-      <svg class="title-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/></svg>
       Memory Scaling
     </h3>
     <p class="panel-desc">
@@ -152,12 +151,6 @@
     border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
     padding: 1.2rem 1.4rem;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
-  }
-
-  .panel:hover {
-    border-color: var(--border-hover);
-    box-shadow: var(--shadow-glow);
   }
 
   .panel-header { margin-bottom: 0.8rem; }
@@ -168,13 +161,8 @@
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
     letter-spacing: -0.02em;
   }
-
-  .title-icon { flex-shrink: 0; opacity: 0.8; }
 
   .panel-desc {
     font-size: 0.87rem;

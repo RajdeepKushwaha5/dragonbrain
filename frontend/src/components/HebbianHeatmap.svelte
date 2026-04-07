@@ -94,9 +94,37 @@
   let tooltipY = 0;
   let showTooltip = false;
 
+  function formatSigmaValue(value) {
+    const abs = Math.abs(value);
+    if (abs >= 100) return value.toFixed(1);
+    if (abs >= 1) return value.toFixed(2);
+    if (abs >= 0.01) return value.toFixed(3);
+    if (abs >= 0.0001) return value.toFixed(4);
+    return abs > 0 ? value.toExponential(2) : '0';
+  }
+
+  // Concept-specific typing hints to guide users
+  const conceptHints = {
+    currency: 'Try typing: "dollar euro pound" or "the price rose to fifty"',
+    proper_noun: 'Try typing: "King Richard" or "Romeo Juliet Hamlet"',
+    punctuation: 'Try typing: "Hello! What? Yes. No! Really?"',
+  };
+
   // Clickable synapse detail state
   let selectedConcept = null;
   let selectedConceptData = null;
+  $: selectedMaxLiveSigma = selectedConceptData
+    ? Math.max(...selectedConceptData.pairs.map(p => Math.abs(p.sigmaVal)), 0.0001)
+    : 0.0001;
+  $: selectedActiveCount = selectedConceptData
+    ? selectedConceptData.pairs.filter(p => Math.abs(p.sigmaVal) > 1e-5).length
+    : 0;
+
+  function liveBarWidth(value) {
+    const abs = Math.abs(value);
+    if (abs <= 0) return 0;
+    return Math.max(6, Math.min(100, (abs / selectedMaxLiveSigma) * 100));
+  }
 
   // Synapse activation timeline — per-concept σ magnitude history
   const synapseHistory = {};  // concept → Array<{ token, avgSigma }>
@@ -204,7 +232,6 @@
   <div class="panel-header">
     <div>
       <h3 class="panel-title">
-        <svg class="title-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
         Hebbian Memory (σ)
       </h3>
       <p class="panel-desc">
@@ -265,28 +292,41 @@
         </button>
       </div>
       <p class="synapse-detail-desc">
-        Neuron pairs that co-activate for <strong>{selectedConceptData.concept}</strong>-related patterns.
-        Live σ values update as you type.
+        Neuron pairs that co-activate for <strong>{selectedConceptData.concept.replace('_', ' ')}</strong>-related patterns.
+        These synapses only strengthen when concept-specific text is typed.
       </p>
+      {#if selectedActiveCount === 0 && conceptHints[selectedConcept]}
+        <p class="synapse-hint">
+          💡 {conceptHints[selectedConcept]}
+        </p>
+      {/if}
       <div class="synapse-pairs-grid">
         {#each selectedConceptData.pairs as pair, idx}
-          <div class="synapse-pair" class:synapse-pair-active={Math.abs(pair.sigmaVal) > 0.001}>
+          <div class="synapse-pair" class:synapse-pair-active={Math.abs(pair.sigmaVal) > 1e-5}>
             <span class="pair-index">#{idx + 1}</span>
             <span class="pair-neurons">σ({pair.i}, {pair.j})</span>
-            <span class="pair-value" class:pair-value-positive={pair.sigmaVal > 0.001} class:pair-value-negative={pair.sigmaVal < -0.001}>
-              {pair.sigmaVal.toFixed(2)}
+            <span class="pair-value" class:pair-value-positive={pair.sigmaVal > 1e-5} class:pair-value-negative={pair.sigmaVal < -1e-5}>
+              {formatSigmaValue(pair.sigmaVal)}
             </span>
             <div class="pair-bar-track">
               <div
+                class="pair-bar-ref"
+                style="width: {Math.min(100, Math.abs(pair.strength) / Math.max(...selectedConceptData.pairs.map(p => Math.abs(p.strength))) * 100)}%; border-color: {selectedConceptData.color}"
+                title="Reference strength: {pair.strength.toFixed(1)}"
+              ></div>
+              <div
                 class="pair-bar-fill"
-                style="width: {Math.min(100, Math.abs(pair.sigmaVal) / (Math.abs(pair.strength) + 1) * 100)}%; background: {selectedConceptData.color}"
+                style="width: {liveBarWidth(pair.sigmaVal)}%; background: {selectedConceptData.color}; opacity: {Math.abs(pair.sigmaVal) > 0 ? 1 : 0.35}"
               ></div>
             </div>
           </div>
         {/each}
       </div>
       <p class="synapse-detail-note">
-        {selectedConceptData.pairs.filter(p => Math.abs(p.sigmaVal) > 0.001).length} of {selectedConceptData.pairs.length} pairs currently active
+        {selectedActiveCount} of {selectedConceptData.pairs.length} pairs active
+        {#if selectedActiveCount === 0}
+          — type concept-related text to activate
+        {/if}
       </p>
 
       <!-- Synapse Activation Timeline -->
@@ -312,7 +352,7 @@
               fill={selectedConceptData.color}
             />
           </svg>
-          <span class="timeline-val">{hist[hist.length - 1].avgSigma.toFixed(3)}</span>
+          <span class="timeline-val">{formatSigmaValue(hist[hist.length - 1].avgSigma)}</span>
         </div>
       {/if}
     </div>
@@ -356,12 +396,11 @@
     border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
     padding: 1.2rem 1.4rem;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    transition: border-color var(--transition-base);
   }
 
   .panel:hover {
     border-color: var(--border-hover);
-    box-shadow: var(--shadow-glow);
   }
 
   .panel-header {
@@ -383,8 +422,6 @@
     gap: 0.45rem;
     letter-spacing: -0.02em;
   }
-
-  .title-icon { flex-shrink: 0; opacity: 0.8; }
 
   .panel-desc {
     font-size: 0.87rem;
@@ -417,7 +454,7 @@
     font-size: 0.78rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast);
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -427,7 +464,6 @@
   .clear-btn:hover {
     background: var(--rose);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(240, 98, 146, 0.3);
   }
 
   .clear-icon { font-size: 0.65rem; }
@@ -435,7 +471,7 @@
   .heatmap-container {
     display: flex;
     gap: 0.6rem;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
   .heatmap-svg {
@@ -447,14 +483,16 @@
 
   .legend {
     display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
+    flex-direction: row;
+    gap: 0.3rem;
     flex-shrink: 0;
+    align-self: stretch;
   }
 
   .legend-bar {
     width: 14px;
-    height: 200px;
+    flex: none;
+    align-self: stretch;
     background: linear-gradient(to bottom, #fde725, #21918c, #440154);
     border-radius: 4px;
     border: 1px solid var(--border-subtle);
@@ -464,7 +502,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 200px;
+    align-self: stretch;
     font-size: 0.72rem;
     font-family: var(--font-mono);
     color: var(--text-secondary);
@@ -491,23 +529,20 @@
     font-family: var(--font-mono);
     padding: 0.12rem 0.45rem;
     border: 1px solid;
-    border-radius: 999px;
+    border-radius: 4px;
     opacity: 0.85;
     cursor: pointer;
     background: transparent;
-    transition: all 0.15s ease;
+    transition: opacity 0.15s ease;
   }
 
   .synapse-tag:hover {
     opacity: 1;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.06);
   }
 
   .synapse-tag-active {
     opacity: 1;
     background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
   }
 
   .synapse-detail {
@@ -516,12 +551,6 @@
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid;
     border-radius: var(--radius-md);
-    animation: slideDown 0.2s ease;
-  }
-
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
   }
 
   .synapse-detail-header {
@@ -564,6 +593,16 @@
 
   .synapse-detail-desc strong {
     color: var(--text-secondary);
+  }
+
+  .synapse-hint {
+    font-size: 0.72rem;
+    color: var(--cyan, #66d9ef);
+    margin: 0 0 0.5rem;
+    padding: 0.35rem 0.5rem;
+    background: rgba(102, 217, 239, 0.06);
+    border-radius: 4px;
+    border-left: 2px solid var(--cyan, #66d9ef);
   }
 
   .synapse-pairs-grid {
@@ -619,12 +658,25 @@
     border-radius: 2px;
     overflow: hidden;
     flex-shrink: 0;
+    position: relative;
+  }
+
+  .pair-bar-ref {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: 2px;
+    border: 1px dashed;
+    opacity: 0.25;
+    box-sizing: border-box;
   }
 
   .pair-bar-fill {
     height: 100%;
     border-radius: 2px;
     transition: width 0.15s ease;
+    position: relative;
   }
 
   .synapse-detail-note {

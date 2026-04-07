@@ -38,8 +38,7 @@
 <div class="input-card">
   <div class="input-header">
     <div class="input-title">
-      <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      <span>Input Text</span>
+      <span>Input</span>
     </div>
     <div class="input-meta">
       {#if byteCount > 0}
@@ -102,7 +101,6 @@
 
   .input-card:focus-within {
     border-color: var(--border-hover);
-    box-shadow: var(--shadow-glow);
   }
 
   .input-header {
@@ -122,11 +120,6 @@
     letter-spacing: -0.01em;
   }
 
-  .input-icon {
-    flex-shrink: 0;
-    opacity: 0.8;
-  }
-
   .input-meta {
     display: flex;
     align-items: center;
@@ -139,7 +132,7 @@
     color: var(--text-dim);
     padding: 0.15rem 0.5rem;
     background: rgba(255, 255, 255, 0.03);
-    border-radius: var(--radius-full);
+    border-radius: 4px;
   }
 
   .infer-badge {

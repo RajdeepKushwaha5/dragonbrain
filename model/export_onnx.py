@@ -62,18 +62,45 @@ def export(model, path, seq_len=32):
 
     os.makedirs(os.path.dirname(path) if os.path.dirname(path) else ".", exist_ok=True)
 
+    # Build dynamic axes: batch + sequence for all tensors
+    dyn = {"tokens": {0: "batch", 1: "seq"}}
+    for name in output_names:
+        if name == "logits":
+            dyn[name] = {0: "batch", 1: "seq"}
+        elif "attn_scores" in name:
+            # attn_scores shape: (B, nh, T, T)
+            dyn[name] = {0: "batch", 2: "seq", 3: "seq"}
+        else:
+            # x_sparse/y_sparse/xy_sparse shape: (B, nh, T, N)
+            dyn[name] = {0: "batch", 2: "seq"}
+
     torch.onnx.export(
         wrapper,
         dummy,
         path,
         input_names=["tokens"],
         output_names=output_names,
-        dynamic_axes={
-            "tokens": {0: "batch", 1: "seq"},
-            **{name: {0: "batch"} for name in output_names},
-        },
+        dynamic_axes=dyn,
         opset_version=17,
     )
+
+    # Merge external data into a single self-contained ONNX file.
+    # onnxruntime-web (WASM) cannot resolve external .data files,
+    # so all weights must be embedded in the protobuf.
+    try:
+        import onnx
+        from onnx.external_data_helper import convert_model_to_external_data
+        model_proto = onnx.load(path, load_external_data=True)
+        onnx.save(model_proto, path, save_as_external_data=False)
+        # Remove leftover .data file
+        data_path = path + ".data"
+        if os.path.exists(data_path):
+            os.remove(data_path)
+        print("  Merged external data into single ONNX file")
+    except ImportError:
+        print("  WARNING: 'onnx' package not installed, model may have external data")
+    except Exception as e:
+        print(f"  WARNING: Could not merge external data: {e}")
 
     file_size = os.path.getsize(path) / (1024 * 1024)
     print(f"Exported ONNX: {path}")

@@ -110,7 +110,6 @@
   <div class="panel-header">
     <div>
       <h3 class="panel-title">
-        <svg class="title-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 22 8.5 12 15 2 8.5"/><polyline points="2 15.5 12 22 22 15.5"/></svg>
         Attention Pattern
       </h3>
       <p class="panel-desc">
@@ -153,12 +152,6 @@
     border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
     padding: 1.2rem 1.4rem;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
-  }
-
-  .panel:hover {
-    border-color: var(--border-hover);
-    box-shadow: var(--shadow-glow);
   }
 
   .panel-header {
@@ -175,13 +168,8 @@
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
     letter-spacing: -0.02em;
   }
-
-  .title-icon { flex-shrink: 0; opacity: 0.8; }
 
   .panel-desc {
     font-size: 0.87rem;
@@ -210,7 +198,7 @@
     font-size: 0.76rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), background var(--transition-fast);
   }
 
   .head-btn:hover {

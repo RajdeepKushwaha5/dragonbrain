@@ -41,12 +41,15 @@
   const DEMO_SCRIPT = "To be, or not to be, that is the question. Whether 'tis nobler in the mind to suffer the slings and arrows of outrageous fortune, or to take arms against a sea of troubles.";
 
   function startDemo() {
-    if (demoRunning || teachRunning) { stopDemo(); return; }
+    if (demoRunning) { stopDemo(); return; }
+    if (teachRunning) stopDemo();
     handleClearMemory();
     demoRunning = true;
     let idx = 0;
+    let pending = false;
 
-    demoTimer = setInterval(() => {
+    demoTimer = setInterval(async () => {
+      if (pending) return; // skip if previous inference still running
       if (idx >= DEMO_SCRIPT.length) { stopDemo(); return; }
       idx++;
       const partial = DEMO_SCRIPT.slice(0, idx);
@@ -57,11 +60,14 @@
       inputText.set(partial);
       tokenBuffer.set(tail);
 
-      handleInput({ detail: { tokens: tail } });
+      pending = true;
+      await handleInput({ detail: { tokens: tail } });
+      pending = false;
     }, 120);
   }
 
   function stopDemo() {
+    const wasRunning = demoRunning || teachRunning;
     demoRunning = false;
     teachRunning = false;
     teachPhase = '';
@@ -77,7 +83,8 @@
   const TEACH_TEST = "the cat sat on the ";
 
   function startTeach() {
-    if (teachRunning || demoRunning) { stopDemo(); return; }
+    if (teachRunning) { stopDemo(); return; }
+    if (demoRunning) stopDemo();
     handleClearMemory();
     teachRunning = true;
     teachPhase = 'repeat-1';
@@ -87,8 +94,10 @@
     let phaseLen1 = TEACH_PHRASE.length;
     let phaseLen2 = phaseLen1 * 2;
     let phaseLen3 = phaseLen1 * 3;
+    let pending = false;
 
-    demoTimer = setInterval(() => {
+    demoTimer = setInterval(async () => {
+      if (pending) return; // skip if previous inference still running
       if (idx >= fullScript.length) { clearInterval(demoTimer); demoTimer = null; teachRunning = false; teachPhase = 'done'; demoText = null; return; }
       idx++;
 
@@ -105,7 +114,9 @@
       inputText.set(partial);
       tokenBuffer.set(tail);
 
-      handleInput({ detail: { tokens: tail } });
+      pending = true;
+      await handleInput({ detail: { tokens: tail } });
+      pending = false;
     }, 100);
   }
 
@@ -135,6 +146,7 @@
       sigmaTopPredictions = [];
       gptTopPredictions = [];
       predictionShift = null;
+      inferenceMs = 0;
       return;
     }
     if (!model.ready) return;
@@ -159,10 +171,10 @@
       const prevSigma = model.getSigma($selectedLayer, $selectedHead).slice();
 
       const layer = result.layers[0];
-      model.updateSigma(layer.x_last, layer.y_last, 0);
+      model.updateSigma(layer.x_last, layer.xy_last, 0);
 
       if (result.layers.length > 1) {
-        model.updateSigma(result.layers[1].x_last, result.layers[1].y_last, 1);
+        model.updateSigma(result.layers[1].x_last, result.layers[1].xy_last, 1);
       }
 
       totalTokens++;
@@ -174,10 +186,21 @@
       );
       if (sigmaLogits && lastLogits) {
         // α grows with experience: more tokens → stronger σ influence
-        const alpha = 0.01 * Math.log(1 + totalTokens);
+        const alpha = 0.05 * Math.log(1 + totalTokens);
+
+        // Normalize sigma logits to same scale as raw logits to prevent domination
+        let rawRange = 0, sigmaRange = 0;
+        for (let i = 0; i < lastLogits.length; i++) {
+          const ra = Math.abs(lastLogits[i]);
+          const sa = Math.abs(sigmaLogits[i]);
+          if (ra > rawRange) rawRange = ra;
+          if (sa > sigmaRange) sigmaRange = sa;
+        }
+        const scale = sigmaRange > 1e-8 ? rawRange / sigmaRange : 0;
+
         const adjustedLogits = new Float32Array(lastLogits.length);
         for (let i = 0; i < lastLogits.length; i++) {
-          adjustedLogits[i] = lastLogits[i] + alpha * sigmaLogits[i];
+          adjustedLogits[i] = lastLogits[i] + alpha * scale * sigmaLogits[i];
         }
         sigmaTopPredictions = model.topKPredictions(adjustedLogits, 5);
 
@@ -354,8 +377,15 @@
     </section>
 
     <!-- ── Predictions Bar ── -->
-    {#if topPredictions.length > 0}
-      <section class="predictions-bar" aria-label="Next token predictions">
+    <section class="predictions-bar" aria-label="Next token predictions" aria-live="polite">
+      <div class="predictions-header">
+        <span class="predictions-title">Next-token predictions</span>
+        {#if topPredictions.length === 0}
+          <span class="predictions-hint">Type a few characters and the BDH / σ-Learned / GPT rows will appear here.</span>
+        {/if}
+      </div>
+
+      {#if topPredictions.length > 0}
         <div class="pred-row">
           <span class="pred-label">BDH Raw:</span>
           {#each topPredictions as pred}
@@ -396,8 +426,12 @@
             <span class="gpt-indicator">Transformer baseline</span>
           </div>
         {/if}
-      </section>
-    {/if}
+      {:else}
+        <div class="pred-empty">
+          <span class="pred-empty-label">Predictions will appear here after the first successful inference.</span>
+        </div>
+      {/if}
+    </section>
 
     <!-- ── Teach Phase Indicator ── -->
     {#if teachRunning || teachPhase === 'done'}
@@ -413,6 +447,7 @@
           <span class="teach-text"><strong>Testing:</strong> Watch σ-Learned predictions shift toward "mat" — the model <em>remembers</em>!</span>
         {:else if teachPhase === 'done'}
           <span class="teach-text"><strong>Done!</strong> σ memory learned the pattern. Try typing yourself to see predictions.</span>
+          <button class="teach-dismiss" on:click={() => teachPhase = ''} aria-label="Dismiss">✕</button>
         {/if}
         <div class="teach-progress">
           <div class="teach-progress-fill" style="width: {teachPhase === 'repeat-1' ? '25' : teachPhase === 'repeat-2' ? '50' : teachPhase === 'repeat-3' ? '75' : '100'}%"></div>
@@ -595,6 +630,25 @@
 
   .teach-text strong { color: var(--cyan, #4dd0e1); }
   .teach-text em { color: var(--gold); font-style: normal; }
+
+  .teach-dismiss {
+    background: none;
+    border: 1px solid rgba(77, 208, 225, 0.3);
+    border-radius: 4px;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.72rem;
+    line-height: 1;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+  }
+
+  .teach-dismiss:hover {
+    color: var(--text-primary);
+    border-color: var(--cyan, #4dd0e1);
+    background: rgba(77, 208, 225, 0.1);
+  }
 
   .teach-progress {
     width: 60px;
@@ -789,12 +843,42 @@
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
-    padding: 0.45rem 0.7rem;
+    padding: 0.55rem 0.75rem;
     margin-bottom: 1rem;
     background: var(--bg-secondary);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     overflow-x: auto;
+    min-height: 64px;
+  }
+
+  .predictions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .predictions-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .predictions-hint,
+  .pred-empty-label {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+
+  .pred-empty {
+    display: flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.1rem 0;
   }
 
   .pred-row {

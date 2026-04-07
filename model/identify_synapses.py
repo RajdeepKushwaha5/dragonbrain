@@ -126,13 +126,51 @@ def main():
         },
     }
 
+    # Compute all deltas first, then assign non-overlapping pairs
+    deltas = {}
+    for concept_name, config_data in concepts.items():
+        concept_texts = config_data["concept_texts"]
+        other_texts = config_data["other_texts"]
+        N = model.config.N
+
+        def compute_sigma(text, head=0, layer=0):
+            tokens = torch.tensor(
+                [[b for b in text.encode("utf-8")[:256]]], dtype=torch.long
+            )
+            with torch.no_grad():
+                _, layer_data = model.forward_with_hooks(tokens)
+            ld = layer_data[layer]
+            x = ld["x_sparse"][0, head]
+            y = ld["y_sparse"][0, head]
+            sigma = torch.zeros(N, N)
+            for t in range(x.shape[0]):
+                sigma += torch.outer(y[t], x[t])
+            return sigma
+
+        sigma_concept = sum(compute_sigma(t) for t in concept_texts)
+        sigma_other = sum(compute_sigma(t) for t in other_texts)
+        deltas[concept_name] = sigma_concept - sigma_other
+
+    # Assign non-overlapping pairs: each concept gets unique (i,j) positions
+    used_pairs = set()
     result = {}
     for concept_name, config_data in concepts.items():
-        pairs = find_concept_synapses(
-            model,
-            concept_texts=config_data["concept_texts"],
-            other_texts=config_data["other_texts"],
-        )
+        delta = deltas[concept_name]
+        flat = delta.abs().flatten()
+        sorted_indices = flat.argsort(descending=True)
+
+        pairs = []
+        for idx in sorted_indices:
+            if len(pairs) >= 10:
+                break
+            i = int(idx // N)
+            j = int(idx % N)
+            if (i, j) in used_pairs:
+                continue
+            strength = float(delta[i, j])
+            pairs.append({"i": i, "j": j, "strength": round(strength, 4)})
+            used_pairs.add((i, j))
+
         result[concept_name] = {
             "pairs": pairs,
             "color": config_data["color"],

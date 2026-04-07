@@ -29,7 +29,6 @@
     font-size: 0.84rem;
     line-height: 1.6;
     margin-top: 0.6rem;
-    animation: fadeIn 0.2s ease;
   }
 
   .icon {

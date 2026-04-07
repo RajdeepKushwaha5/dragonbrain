@@ -55,7 +55,7 @@
       <div class="stat-sep"></div>
       <div class="stat">
         <span class="stat-value">{$tokenCount}</span>
-        <span class="stat-label">tokens</span>
+        <span class="stat-label">tokens learned</span>
       </div>
     {/if}
   </div>

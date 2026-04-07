@@ -44,18 +44,36 @@ def export(model, path, seq_len=32):
 
     os.makedirs(os.path.dirname(path) if os.path.dirname(path) else ".", exist_ok=True)
 
+    # Build dynamic axes: batch + sequence for all output tensors
+    dyn = {
+        "tokens": {0: "batch", 1: "seq"},
+    }
+    for name in output_names:
+        dyn[name] = {0: "batch", 1: "seq"}
+
     torch.onnx.export(
         wrapper,
         dummy,
         path,
         input_names=["tokens"],
         output_names=output_names,
-        dynamic_axes={
-            "tokens": {0: "batch", 1: "seq"},
-            **{name: {0: "batch"} for name in output_names},
-        },
+        dynamic_axes=dyn,
         opset_version=17,
     )
+
+    # Merge external data into single ONNX file for onnxruntime-web compatibility
+    try:
+        import onnx
+        model_proto = onnx.load(path, load_external_data=True)
+        onnx.save(model_proto, path, save_as_external_data=False)
+        data_path = path + ".data"
+        if os.path.exists(data_path):
+            os.remove(data_path)
+        print("  Merged external data into single ONNX file")
+    except ImportError:
+        print("  WARNING: 'onnx' not installed, model may have external data")
+    except Exception as e:
+        print(f"  WARNING: Could not merge external data: {e}")
 
     file_size = os.path.getsize(path) / (1024 * 1024)
     print(f"Exported ONNX: {path}")

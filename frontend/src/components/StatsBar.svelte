@@ -65,7 +65,7 @@
     margin-left: auto;
     padding: 0.12rem 0.5rem;
     background: rgba(255, 255, 255, 0.04);
-    border-radius: var(--radius-full);
+    border-radius: 4px;
     font-size: 0.66rem;
     color: var(--text-muted);
     text-transform: uppercase;

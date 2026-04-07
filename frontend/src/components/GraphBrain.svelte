@@ -270,7 +270,6 @@
   <div class="panel-header">
     <div>
       <h3 class="panel-title">
-        <svg class="title-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="19" r="2"/><line x1="7" y1="7" x2="11" y2="17"/><line x1="17" y1="7" x2="13" y2="17"/><line x1="7" y1="6" x2="17" y2="6"/></svg>
         Emergent Graph
       </h3>
       <p class="panel-desc">{modeInfo[graphMode].desc}</p>
@@ -320,7 +319,7 @@
       {/each}
       {#if evoStats}
         <span class="evo-stats">
-          max°{evoStats.max_degree} · avg°{evoStats.avg_degree} · {evoStats.gx_edges} edges
+          max°{evoStats.max_degree} · avg°{evoStats.avg_degree} · {graphMode === 'gy' ? evoStats.gy_edges : evoStats.edges} edges
         </span>
       {/if}
     </div>
@@ -382,7 +381,6 @@
 
   .panel:hover {
     border-color: var(--border-hover);
-    box-shadow: var(--shadow-glow);
   }
 
   .panel-header {
@@ -399,11 +397,6 @@
     align-items: center;
     gap: 0.45rem;
     letter-spacing: -0.02em;
-  }
-
-  .title-icon {
-    flex-shrink: 0;
-    opacity: 0.8;
   }
 
   .panel-desc {
@@ -450,7 +443,7 @@
     font-size: 0.72rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), border-color var(--transition-fast);
   }
 
   .evo-btn:hover { color: var(--text-secondary); border-color: var(--border-hover); }
@@ -468,12 +461,12 @@
     padding: 0.2rem 0.6rem;
     background: transparent;
     border: 1px solid var(--border-subtle);
-    border-radius: 999px;
+    border-radius: 4px;
     color: var(--text-muted);
     font-family: var(--font-sans);
     font-size: 0.72rem;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
   }
 
   .snap-btn:hover { border-color: var(--border-hover); color: var(--text-secondary); }
@@ -496,7 +489,7 @@
     font-size: 0.78rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), background var(--transition-fast);
   }
 
   .mode-btn:hover {
@@ -508,7 +501,6 @@
     background: var(--accent);
     color: #fff;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
   }
 
   .node-count {

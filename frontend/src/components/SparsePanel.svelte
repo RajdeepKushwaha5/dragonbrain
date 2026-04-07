@@ -81,7 +81,6 @@
   <div class="panel-header">
     <div>
       <h3 class="panel-title">
-        <svg class="title-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         Sparse Activation
       </h3>
       <p class="panel-desc">
@@ -164,12 +163,11 @@
     border-radius: var(--radius-lg);
     padding: 1.2rem 1.4rem;
     overflow: hidden;
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    transition: border-color var(--transition-base);
   }
 
   .panel:hover {
     border-color: var(--border-hover);
-    box-shadow: var(--shadow-glow);
   }
 
   .panel-header {
@@ -186,11 +184,6 @@
     align-items: center;
     gap: 0.45rem;
     letter-spacing: -0.02em;
-  }
-
-  .title-icon {
-    flex-shrink: 0;
-    opacity: 0.8;
   }
 
   .panel-desc {

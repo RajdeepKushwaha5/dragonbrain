@@ -20,8 +20,6 @@ export class GPTModel {
 
   /**
    * Load the transformer ONNX model.
-   * Fetches model + external data explicitly to avoid ort URL-resolution issues
-   * when creating a second InferenceSession in the same runtime.
    * @param {string} modelPath - Path to transformer.onnx
    * @param {object} ort - Cached onnxruntime-web module (shared with BDH)
    */
@@ -29,23 +27,8 @@ export class GPTModel {
     try {
       this._ort = ort;
 
-      // Fetch model proto and external weights as ArrayBuffers
-      const [modelResp, dataResp] = await Promise.all([
-        fetch(modelPath),
-        fetch(modelPath + '.data'),
-      ]);
-      if (!modelResp.ok) throw new Error(`Failed to fetch ${modelPath}: ${modelResp.status}`);
-      if (!dataResp.ok) throw new Error(`Failed to fetch ${modelPath}.data: ${dataResp.status}`);
-
-      const modelBuffer = await modelResp.arrayBuffer();
-      const dataBuffer = await dataResp.arrayBuffer();
-
-      // Derive the external data filename from the path (e.g. "transformer.onnx.data")
-      const dataFileName = modelPath.split('/').pop() + '.data';
-
-      this.session = await ort.InferenceSession.create(modelBuffer, {
+      this.session = await ort.InferenceSession.create(modelPath, {
         executionProviders: ['wasm'],
-        externalData: [{ data: dataBuffer, path: dataFileName }],
       });
 
       // Detect hidden dim from output shape metadata

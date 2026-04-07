@@ -13,6 +13,12 @@ model/**/*.pt
 model/*.onnx
 model/venv/
 model/data/
+
+# Dev-only scripts (not needed for deployment)
+DEMO_SCRIPT.md
+model/generate_mock_data.py
+model/memory_benchmark.py
+model/extract_weights.py
 model/checkpoints/
 model/venv/
 *.pyc

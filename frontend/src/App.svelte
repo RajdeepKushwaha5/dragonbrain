@@ -636,7 +636,7 @@
       <div class="footer-links">
         <a href="https://arxiv.org/abs/2509.26507" target="_blank" rel="noopener">Paper</a>
         <span class="footer-sep">·</span>
-        <a href="https://github.com/pathwaycom/bdh" target="_blank" rel="noopener">Repo</a>
+        <a href="https://github.com/RajdeepKushwaha5/dragonbrain" target="_blank" rel="noopener">Repo</a>
         <span class="footer-sep">·</span>
         <a href="https://pathway.com" target="_blank" rel="noopener">Pathway</a>
       </div>

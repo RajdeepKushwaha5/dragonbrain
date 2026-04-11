@@ -207,7 +207,7 @@
     flex-direction: column;
     align-items: center;
     flex: 1;
-    min-width: 200px;
+    min-width: min(200px, 100%);
   }
 
   .vs-divider {
@@ -285,6 +285,10 @@
       align-items: center;
     }
 
+    .side {
+      width: 100%;
+    }
+
     .vs-divider {
       flex-direction: row;
       gap: 0.6rem;
@@ -294,6 +298,15 @@
     .vs-line {
       width: 40px;
       height: 1px;
+    }
+
+    .panel {
+      padding: 0.8rem;
+    }
+
+    .sparkline-header {
+      flex-direction: column;
+      gap: 0.2rem;
     }
   }
 </style>

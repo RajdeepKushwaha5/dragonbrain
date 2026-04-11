@@ -81,10 +81,12 @@
 
   <div class="about">
     <button class="back-btn" on:click={() => dispatch('back')} aria-label="Back to visualizer">
-      &larr; Back to Visualizer
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Visualizer
     </button>
 
     <header class="hero">
+      <div class="hero-badge">Interactive Neural Architecture Explorer</div>
       <h1>Dragon Brain</h1>
       <p class="hero-sub">
         An interactive visualizer for the Baby Dragon Hatchling architecture —
@@ -94,6 +96,8 @@
         <a href="https://arxiv.org/abs/2509.26507" target="_blank" rel="noopener">Read the Paper</a>
         <span class="sep">&middot;</span>
         <span>Kosowski et al. 2025</span>
+        <span class="sep">&middot;</span>
+        <span class="hero-version">v1.0 &middot; BDH 229K &middot; GPT 148K</span>
       </div>
     </header>
 
@@ -496,8 +500,8 @@
         <li><strong>Switch layers and heads</strong> with L1/L2 and H1/H2.</li>
         <li><strong>Explore the graph</strong> — toggle between Gx (Thought Flow) and Gy (Memory Echo). Drag and zoom to inspect hubs.</li>
         <li><strong>Clear memory</strong> with the Clear button, then retype to watch &sigma; rebuild from scratch.</li>
-        <li><strong>Try Demo</strong> (&blacktriangleright;) — watch a Shakespeare passage type itself while all panels animate.</li>
-        <li><strong>Try Teach</strong> (&phone;) — feed a repeated phrase three times, then watch &sigma;-Learned shift predictions.</li>
+        <li><strong>Try Demo</strong> — watch a Shakespeare passage type itself while all panels animate.</li>
+        <li><strong>Try Teach</strong> — feed a repeated phrase three times, then watch &sigma;-Learned shift predictions.</li>
       </ol>
     </section>
 
@@ -536,6 +540,7 @@
     max-width: 740px;
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
+    padding-left: 220px;
     animation: fadeIn 0.3s ease;
     flex: 1;
     min-width: 0;
@@ -543,8 +548,9 @@
 
   /* ── Sidebar ── */
   .sidebar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
     height: 100vh;
     width: 200px;
     flex-shrink: 0;
@@ -554,9 +560,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.1) transparent;
+    overflow: hidden;
     z-index: 50;
   }
 
@@ -626,7 +630,9 @@
 
   /* ── Back Button ── */
   .back-btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     padding: 0.5rem 0;
     background: none;
     border: none;
@@ -645,6 +651,21 @@
     margin-bottom: 2.5rem;
     padding-bottom: 2rem;
     border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .hero-badge {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    background: rgba(91, 141, 239, 0.1);
+    border: 1px solid rgba(91, 141, 239, 0.2);
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 0.75rem;
   }
 
   .hero h1 {
@@ -680,6 +701,12 @@
 
   .hero-meta a:hover { color: var(--text-primary); }
   .hero-meta .sep { color: var(--text-dim); }
+
+  .hero-version {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
 
   /* ── Sections ── */
   .section {
@@ -755,11 +782,6 @@
   .section strong {
     color: var(--text-primary);
     font-weight: 600;
-  }
-
-  .section em {
-    color: var(--text-muted);
-    font-style: italic;
   }
 
   /* ── Formula blocks ── */
@@ -940,6 +962,7 @@
     }
     .sidebar.open { transform: translateX(0); }
     .sidebar-toggle { display: flex; }
+    .about { padding-left: 1.5rem; }
     .sidebar-backdrop {
       display: block;
       position: fixed;
@@ -950,9 +973,26 @@
   }
 
   @media (max-width: 768px) {
-    .about { padding: 1.5rem 1rem 3rem; }
+    .about { padding: 1.5rem 1rem 3rem; padding-left: 1rem; }
     .hero h1 { font-size: 1.8rem; }
     .section h2 { font-size: 1.2rem; }
+
+    .formula {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .formula code {
+      font-size: 0.82rem;
+    }
+
+    .glossary-table th:first-child {
+      min-width: 100px;
+    }
+
+    .glossary-table td:first-child {
+      white-space: normal;
+    }
   }
 
   @media (max-width: 480px) {
@@ -962,5 +1002,14 @@
     .hero-meta { flex-direction: column; gap: 0.3rem; }
     table { font-size: 0.78rem; }
     th, td { padding: 0.5rem 0.6rem; }
+
+    .sidebar-link {
+      padding: 0.55rem 0.75rem;
+      min-height: 40px;
+    }
+
+    .ref-list li {
+      padding: 0.55rem 0;
+    }
   }
 </style>

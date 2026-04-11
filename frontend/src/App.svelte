@@ -9,6 +9,7 @@
     selectedLayer, selectedHead, tokenCount, inferring,
     gptReady, gptData, sparsityHistory, sigmaDelta,
   } from './lib/stores.js';
+  import { saveBrainState, loadBrainState, clearBrainState } from './lib/memoryDB.js';
 
   import TokenInput from './components/TokenInput.svelte';
   import LayerSelector from './components/LayerSelector.svelte';
@@ -18,6 +19,8 @@
   import AttentionPanel from './components/AttentionPanel.svelte';
   import MemoryPanel from './components/MemoryPanel.svelte';
   import AboutPage from './components/AboutPage.svelte';
+  import SynapseTracer from './components/SynapseTracer.svelte';
+  import GuidedTour from './components/GuidedTour.svelte';
 
   const model = new BDHModel();
   const gptModel = new GPTModel();
@@ -33,6 +36,22 @@
   let gptTopPredictions = [];
   let predictionShift = null;  // { from, to } when σ changes top-1
   let showGuide = false;
+
+  // ── Cross-Session Memory ──
+  let sessionNum = 1;
+  let resumeToast = '';   // brief toast message after auto-resume
+  let tourActive = false;
+
+  // ── Panel collapse state (progressive disclosure) ──
+  let expandedSections = { activations: true, internals: false, insights: false };
+
+  function toggleSection(key) {
+    expandedSections[key] = !expandedSections[key];
+    expandedSections = expandedSections; // trigger reactivity
+  }
+
+  // ── Synapse Tracer ──
+  $: currentXActivations = $inferenceData?.layers?.[$selectedLayer]?.x_last?.[$selectedHead] || null;
 
   // ── Demo Mode ──
   let demoRunning = false;
@@ -130,6 +149,23 @@
       await gptModel.load('./transformer.onnx', model._ort);
       gptReady.set(gptModel.ready);
     }
+
+    // Auto-resume cross-session memory (silent)
+    try {
+      const saved = await loadBrainState();
+      if (saved && saved.totalTokens > 0) {
+        model.restoreSigma(saved.sigma);
+        totalTokens = saved.totalTokens;
+        tokenCount.set(totalTokens);
+        sessionNum = (saved.sessionCount || 1) + 1;
+        sigmaFlat = model.getSigma($selectedLayer, $selectedHead).slice();
+        sigmaData.set({ ...model.sigma });
+        resumeToast = `Resumed session #${sessionNum - 1} — ${saved.totalTokens} tokens`;
+        setTimeout(() => { resumeToast = ''; }, 4000);
+      }
+    } catch (err) {
+      console.warn('Could not check saved brain state:', err);
+    }
   });
 
   let inferenceSeq = 0;
@@ -171,10 +207,10 @@
       const prevSigma = model.getSigma($selectedLayer, $selectedHead).slice();
 
       const layer = result.layers[0];
-      model.updateSigma(layer.x_last, layer.y_last, 0);
+      model.updateSigma(layer.x_last, layer.xy_last, 0);
 
       if (result.layers.length > 1) {
-        model.updateSigma(result.layers[1].x_last, result.layers[1].y_last, 1);
+        model.updateSigma(result.layers[1].x_last, result.layers[1].xy_last, 1);
       }
 
       totalTokens++;
@@ -243,6 +279,9 @@
       const pct = (actCount / actTotal) * 100;
       sparsityHistory.update(h => [...h.slice(-59), { pct }]);
 
+      // Auto-save σ to IndexedDB periodically
+      autoSave();
+
       // Run GPT inference (non-blocking relative to BDH)
       if (gptModel.ready) {
         try {
@@ -285,6 +324,16 @@
     predictionShift = null;
     teachPhase = '';
     demoText = null;
+    clearBrainState().catch(() => {});
+  }
+
+  // Auto-save σ to IndexedDB every 10 tokens
+  let lastSavedTokens = 0;
+  function autoSave() {
+    if (totalTokens > 0 && totalTokens - lastSavedTokens >= 10) {
+      lastSavedTokens = totalTokens;
+      saveBrainState(model.sigma, totalTokens, sessionNum).catch(() => {});
+    }
   }
 
   function autoFocus(node) { requestAnimationFrame(() => node.focus()); }
@@ -307,6 +356,15 @@
       </div>
     </div>
     <div class="header-right">
+      {#if totalTokens > 0}
+        <span class="session-badge" title="Session #{sessionNum} — {totalTokens} tokens learned">
+          S{sessionNum} &middot; {totalTokens} tokens
+        </span>
+      {/if}
+      <button class="about-btn tour-btn-header" on:click={() => tourActive = true}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span class="about-btn-text">Tour</span>
+      </button>
       <button class="about-btn" on:click={() => showGuide = !showGuide}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span class="about-btn-text">Guide</span>
@@ -332,7 +390,7 @@
     <div class="guide-panel" role="dialog" aria-label="Quick guide" tabindex="-1" on:keydown={e => e.key === 'Escape' && (showGuide = false)} use:autoFocus>
       <div class="guide-header">
         <h2 class="guide-title">
-          <span class="guide-icon">💡</span>
+          <svg class="guide-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           Quick Guide
         </h2>
         <button class="guide-close" on:click={() => showGuide = false} aria-label="Close guide">
@@ -366,7 +424,7 @@
     </div>
   {:else}
     <!-- ── Controls ── -->
-    <section class="controls-section">
+    <section class="controls-section" data-tour="input">
       <TokenInput on:input={handleInput} externalText={demoText} />
       <div class="controls-row">
         <LayerSelector />
@@ -377,7 +435,7 @@
     </section>
 
     <!-- ── Predictions Bar ── -->
-    <section class="predictions-bar" aria-label="Next token predictions" aria-live="polite">
+    <section class="predictions-bar" aria-label="Next token predictions" aria-live="polite" data-tour="predictions">
       <div class="predictions-header">
         <span class="predictions-title">Next-token predictions</span>
         {#if topPredictions.length === 0}
@@ -410,7 +468,7 @@
               </span>
             {/if}
             <span class="sigma-indicator" title="Predictions modulated by accumulated Hebbian memory">
-              ⚡ {totalTokens} tokens learned
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;margin-right:3px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>{totalTokens} tokens learned
             </span>
           </div>
         {/if}
@@ -433,10 +491,23 @@
       {/if}
     </section>
 
+    <!-- ── Model Transparency Bar ── -->
+    <section class="transparency-bar">
+      <span class="transp-item" title="Both models are trained on Tiny Shakespeare (1.1M chars). Parameter counts are orders of magnitude below production scale (e.g. GPT-2 = 124M params).">
+        <span class="transp-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></span>
+        <span class="transp-text"><strong>BDH 229K</strong>&thinsp;vs&thinsp;<strong>GPT 148K</strong> params &middot; Tiny Shakespeare &middot; educational scale</span>
+      </span>
+      <span class="transp-sep">|</span>
+      <span class="transp-item" title="True BDH uses σ inside the recurrent state-space dynamics (Eq. 8). This visualizer applies σ as a post-forward logit correction: logits' = logits + α·scale·(σ·x → E → W_lm). Results are directionally correct but not identical to the paper's formulation.">
+        <span class="transp-icon">⚠</span>
+        <span class="transp-text">σ-Learned = <em>post-hoc approximation</em> of Eq.&nbsp;8 (see paper)</span>
+      </span>
+    </section>
+
     <!-- ── Teach Phase Indicator ── -->
     {#if teachRunning || teachPhase === 'done'}
       <section class="teach-bar">
-        <span class="teach-icon">🧠</span>
+        <span class="teach-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></span>
         {#if teachPhase === 'repeat-1'}
           <span class="teach-text">Teaching: <strong>Repetition 1/3</strong> — building σ memory...</span>
         {:else if teachPhase === 'repeat-2'}
@@ -457,28 +528,72 @@
 
     <!-- ── Panel Grid ── -->
     <section class="panels" aria-label="Visualization panels">
-      <div class="panel-row top-row">
-        <SparsePanel />
-        <GraphBrain activeNeuronIds={$activeNeuronIds} />
+      <!-- Section 1: Activations -->
+      <div class="section-header" on:click={() => toggleSection('activations')} role="button" tabindex="0" on:keydown={e => e.key === 'Enter' && toggleSection('activations')}>
+        <span class="section-chevron" class:open={expandedSections.activations}>▸</span>
+        <span class="section-label">Sparse Activations &amp; Network Graph</span>
+        <span class="section-hint">neuron firing + topology</span>
       </div>
+      {#if expandedSections.activations}
+        <div class="panel-row top-row" style="animation: slideUp 0.3s ease">
+          <div data-tour="sparse"><SparsePanel /></div>
+          <div data-tour="graph"><GraphBrain activeNeuronIds={$activeNeuronIds} /></div>
+        </div>
+      {/if}
 
-      <div class="panel-row bottom-row">
-        <HebbianHeatmap
-          sigmaFlat={sigmaFlat}
-          tokenCount={totalTokens}
-          sigmaDelta={sigmaDeltaLocal}
-          on:clear={handleClearMemory}
-        />
-        <AttentionPanel />
+      <!-- Section 2: Internals -->
+      <div class="section-header" on:click={() => toggleSection('internals')} role="button" tabindex="0" on:keydown={e => e.key === 'Enter' && toggleSection('internals')}>
+        <span class="section-chevron" class:open={expandedSections.internals}>▸</span>
+        <span class="section-label">Hebbian Memory &amp; Attention</span>
+        <span class="section-hint">σ heatmap + causal attention</span>
       </div>
+      {#if expandedSections.internals}
+        <div class="panel-row bottom-row" style="animation: slideUp 0.3s ease">
+          <div data-tour="heatmap">
+            <HebbianHeatmap
+              sigmaFlat={sigmaFlat}
+              tokenCount={totalTokens}
+              sigmaDelta={sigmaDeltaLocal}
+              on:clear={handleClearMemory}
+            />
+          </div>
+          <div data-tour="attention"><AttentionPanel /></div>
+        </div>
+      {/if}
 
-      <div class="panel-row insights-row">
-        <MemoryPanel />
+      <!-- Section 3: Insights -->
+      <div class="section-header" on:click={() => toggleSection('insights')} role="button" tabindex="0" on:keydown={e => e.key === 'Enter' && toggleSection('insights')}>
+        <span class="section-chevron" class:open={expandedSections.insights}>▸</span>
+        <span class="section-label">Reasoning Trace &amp; Memory Efficiency</span>
+        <span class="section-hint">synapse tracer + O(1) comparison</span>
       </div>
+      {#if expandedSections.insights}
+        <div class="panel-row bottom-row" style="animation: slideUp 0.3s ease">
+          <div data-tour="tracer">
+            <SynapseTracer
+              sigmaFlat={sigmaFlat}
+              xActivations={currentXActivations}
+              tokenCount={totalTokens}
+            />
+          </div>
+          <div data-tour="memory"><MemoryPanel /></div>
+        </div>
+      {/if}
     </section>
   {/if}
 
   {/if}
+
+  <!-- ── Cross-Session Memory Toast ── -->
+  {#if resumeToast}
+    <div class="resume-toast" role="status" aria-live="polite">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      {resumeToast}
+    </div>
+  {/if}
+
+  <!-- ── Guided Tour ── -->
+  <GuidedTour active={tourActive} on:close={() => tourActive = false} on:expandSection={e => { expandedSections[e.detail] = true; expandedSections = expandedSections; }} />
 
   <!-- ── Footer ── -->
   <footer>
@@ -506,6 +621,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
   }
 
   /* ── Header ── */
@@ -552,14 +668,18 @@
   .header-right {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .about-btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.4rem;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.85rem;
+    min-height: 36px;
+    min-width: 36px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-sm);
@@ -620,7 +740,7 @@
     animation: slideUp 0.3s ease;
   }
 
-  .teach-icon { font-size: 1.1rem; }
+  .teach-icon { display: inline-flex; align-items: center; color: var(--accent); margin-right: 0.3rem; }
 
   .teach-text {
     font-size: 0.86rem;
@@ -687,7 +807,7 @@
     background: var(--bg-secondary);
     border: 1px solid var(--border-hover);
     border-radius: var(--radius-lg);
-    padding: 1.5rem 1.8rem;
+    padding: 1.5rem clamp(1rem, 4vw, 1.8rem);
     z-index: 100;
     box-shadow: 0 0 40px rgba(91, 141, 239, 0.08), 0 8px 32px rgba(0, 0, 0, 0.5);
     animation: slideUp 0.25s ease;
@@ -712,7 +832,12 @@
   }
 
   .guide-icon {
-    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-right: 0.4rem;
   }
 
   .guide-close {
@@ -751,7 +876,7 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
-    font-size: 0.88rem;
+    font-size: clamp(0.8rem, 2.5vw, 0.88rem);
     color: var(--text-secondary);
     line-height: 1.6;
     transition: border-color var(--transition-fast);
@@ -999,23 +1124,115 @@
     margin-left: auto;
   }
 
+  /* ── Transparency Bar ── */
+  .transparency-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.75rem;
+    margin-bottom: 0.6rem;
+    background: rgba(240, 194, 70, 0.04);
+    border: 1px solid rgba(240, 194, 70, 0.12);
+    border-radius: 6px;
+    flex-wrap: wrap;
+  }
+
+  .transp-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: help;
+  }
+
+  .transp-icon {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-dim);
+    margin-right: 0.2rem;
+  }
+
+  .transp-text {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    letter-spacing: 0.01em;
+  }
+
+  .transp-text strong {
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .transp-text em {
+    color: var(--gold);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .transp-sep {
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    opacity: 0.4;
+  }
+
   /* ── Panels ── */
   .panels {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 0.6rem;
     flex: 1;
     animation: slideUp 0.4s ease;
   }
 
-  .panel-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.2rem;
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.7rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--transition-fast);
   }
 
-  .insights-row {
-    grid-template-columns: 1fr;
+  .section-header:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-default);
+  }
+
+  .section-chevron {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    transition: transform 0.2s ease;
+    display: inline-block;
+  }
+
+  .section-chevron.open {
+    transform: rotate(90deg);
+  }
+
+  .section-label {
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: -0.01em;
+  }
+
+  .section-hint {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--text-dim);
+    margin-left: auto;
+    letter-spacing: 0.03em;
+  }
+
+  .panel-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    gap: 1.2rem;
   }
 
   /* ── Footer ── */
@@ -1072,7 +1289,7 @@
 
   @media (max-width: 768px) {
     main {
-      padding: 0.6rem 1rem 1.5rem;
+      padding: 0.6rem 0.75rem 1.5rem;
     }
 
     h1 {
@@ -1080,20 +1297,143 @@
     }
 
     .logo-icon {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
+    }
+
+    .tagline {
+      font-size: 0.78rem;
     }
 
     .about-btn-text {
       display: none;
     }
 
+    .about-btn {
+      padding: 0.45rem 0.55rem;
+    }
+
     .panel-row {
       grid-template-columns: 1fr;
+      gap: 0.8rem;
     }
 
     .footer-inner {
       flex-direction: column;
       text-align: center;
     }
+
+    .predictions-bar {
+      padding: 0.4rem 0.55rem;
+    }
+
+    .transparency-bar {
+      padding: 0.3rem 0.55rem;
+      gap: 0.4rem;
+    }
+
+    .section-header {
+      padding: 0.55rem 0.7rem;
+      min-height: 44px;
+    }
+
+    .controls-row {
+      gap: 0.6rem;
+    }
+
+    .teach-bar {
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (max-width: 480px) {
+    main {
+      padding: 0.4rem 0.5rem 1rem;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+    }
+
+    .logo-icon {
+      font-size: 1.4rem;
+    }
+
+    .header-right {
+      gap: 0.35rem;
+    }
+
+    .about-btn {
+      padding: 0.4rem 0.45rem;
+      min-height: 36px;
+      min-width: 36px;
+    }
+
+    .session-badge {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.5rem;
+    }
+
+    .pred-token {
+      padding: 0.18rem 0.4rem;
+      font-size: 0.75rem;
+    }
+
+    .pred-label {
+      font-size: 0.7rem;
+    }
+
+    .predictions-title {
+      font-size: 0.66rem;
+    }
+
+    .transp-text {
+      font-size: 0.62rem;
+    }
+  }
+
+  /* ── Session Badge ── */
+  .session-badge {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--gold);
+    background: rgba(240, 194, 70, 0.08);
+    border: 1px solid rgba(240, 194, 70, 0.2);
+    border-radius: var(--radius-full);
+    padding: 0.28rem 0.7rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  /* ── Tour Header Button ── */
+  .tour-btn-header {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Resume Toast ── */
+  .resume-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1.1rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--green, #3dd68c);
+    border-radius: var(--radius-full);
+    color: var(--green, #3dd68c);
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 500;
+    z-index: 800;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease, fadeOut 0.4s ease 3.4s forwards;
+    white-space: nowrap;
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateX(-50%) translateY(8px); }
   }
 </style>

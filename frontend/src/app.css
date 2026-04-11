@@ -171,3 +171,31 @@ svg circle { transition: fill 0.15s ease, r 0.15s ease; }
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Tour highlight ── */
+:global(.tour-highlight) {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 4px;
+  box-shadow: 0 0 24px rgba(91, 141, 239, 0.15) !important;
+  transition: outline 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  z-index: 950;
+}
+
+/* ── Responsive helpers ── */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Prevent SVG / canvas overflow on small screens */
+svg, canvas {
+  max-width: 100%;
+}
+
+/* Ensure images and media don't overflow */
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}

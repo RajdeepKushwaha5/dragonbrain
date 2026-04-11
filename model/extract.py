@@ -20,13 +20,14 @@ import torch
 from bdh_tiny import BDHTinyModel, TINY_CONFIG
 
 
-def _extract_topology(G, top_k, threshold_quantile):
+def _extract_topology(G, top_k, threshold_quantile, max_links=4000):
     """Generic hub extraction for any N×N graph G (already on CPU).
 
     Args:
         G: (N, N) tensor — neuron-to-neuron interaction matrix
         top_k: number of hub neurons to include
         threshold_quantile: quantile for edge thresholding
+        max_links: maximum number of links to include (strongest edges)
 
     Returns:
         dict with 'nodes' and 'links' for D3 force-directed graph
@@ -40,17 +41,30 @@ def _extract_topology(G, top_k, threshold_quantile):
         {"id": int(top_idx[i]), "degree": int(out_degree[top_idx[i]])}
         for i in range(len(top_idx))
     ]
-    links = []
+
+    # Collect all candidate edges above a minimal threshold
+    candidates = []
     for si in range(len(top_idx)):
         for ti in range(len(top_idx)):
+            if si == ti:
+                continue
             w = float(G_sub[si, ti])
-            if abs(w) > threshold * 0.4:
-                links.append({
-                    "source": int(si),
-                    "target": int(ti),
-                    "weight": round(w, 4),
-                    "excitatory": w > 0,
-                })
+            if abs(w) > threshold * 0.1:
+                candidates.append((si, ti, w))
+
+    # Sort by absolute weight and keep strongest
+    candidates.sort(key=lambda x: abs(x[2]), reverse=True)
+    candidates = candidates[:max_links]
+
+    links = [
+        {
+            "source": int(si),
+            "target": int(ti),
+            "weight": round(w, 4),
+            "excitatory": w > 0,
+        }
+        for si, ti, w in candidates
+    ]
 
     return {"nodes": nodes, "links": links, "threshold": round(threshold, 6)}
 
@@ -94,6 +108,7 @@ def main():
     parser.add_argument("--output", default="../frontend/src/data/graph_topology.json")
     parser.add_argument("--head", type=int, default=0)
     parser.add_argument("--top_k", type=int, default=80)
+    parser.add_argument("--threshold_quantile", type=float, default=0.92)
     args = parser.parse_args()
 
     # Load model
@@ -105,7 +120,7 @@ def main():
     print(f"Loaded checkpoint from iter {ckpt.get('iter', '?')}")
 
     # Extract topologies
-    topologies = extract_graph_topologies(model, head=args.head, top_k=args.top_k)
+    topologies = extract_graph_topologies(model, head=args.head, top_k=args.top_k, threshold_quantile=args.threshold_quantile)
 
     gx_nodes = len(topologies["gx"]["nodes"])
     gx_links = len(topologies["gx"]["links"])

@@ -244,12 +244,33 @@
   }
 
   @media (max-width: 600px) {
+    .panel {
+      padding: 0.8rem;
+    }
+
     .panel-header {
       flex-direction: column;
     }
 
     .panel-desc {
       max-width: none;
+    }
+
+    .attn-svg {
+      max-width: 100%;
+    }
+
+    .heatmap-container {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .head-btn {
+      padding: 0.35rem 0.65rem;
+      min-height: 36px;
+    }
+
+    .footnote {
+      font-size: 0.78rem;
     }
   }
 </style>

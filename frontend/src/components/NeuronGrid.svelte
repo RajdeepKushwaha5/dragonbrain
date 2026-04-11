@@ -31,7 +31,7 @@
     const colorScale = getColorScale(activations);
 
     if (!initialized) {
-      svg.attr('width', W).attr('height', H);
+      svg.attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
       svg.selectAll('rect')
         .data(Array.from(activations))
         .enter()
@@ -126,11 +126,15 @@
     background: rgba(0, 0, 0, 0.3);
     padding: 4px;
     border: 1px solid var(--border-default);
+    width: 100%;
+    max-width: 352px;
   }
 
   .neuron-grid {
     display: block;
     border-radius: 4px;
+    width: 100%;
+    height: auto;
   }
 
   .tooltip {

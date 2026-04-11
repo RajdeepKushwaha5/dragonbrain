@@ -258,4 +258,22 @@
   .crossover-note strong {
     color: var(--text-primary);
   }
+
+  @media (max-width: 600px) {
+    .panel {
+      padding: 0.8rem;
+    }
+
+    .stats-row {
+      gap: 0.6rem;
+    }
+
+    .stat {
+      font-size: 0.72rem;
+    }
+
+    .crossover-note {
+      font-size: 0.7rem;
+    }
+  }
 </style>

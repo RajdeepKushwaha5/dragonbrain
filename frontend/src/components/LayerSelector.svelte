@@ -153,5 +153,14 @@
       margin-left: 0;
       width: 100%;
     }
+
+    .sel-btn {
+      padding: 0.35rem 0.75rem;
+      min-height: 36px;
+    }
+
+    .selector-bar {
+      gap: 0.6rem;
+    }
   }
 </style>

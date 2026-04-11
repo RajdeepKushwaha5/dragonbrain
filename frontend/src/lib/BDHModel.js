@@ -21,6 +21,8 @@ export class BDHModel {
     this.session = null;
     this.sigma = {};              // { "layer_head": Float32Array(N*N) }
     this.nLayers = 2;
+    this.nHeads = NH;
+    this.N = N;
     this.mockMode = false;
     this.ready = false;
     this._ort = null;            // cached onnxruntime-web module
@@ -314,5 +316,16 @@ export class BDHModel {
   /** Clear all accumulated Hebbian memory. */
   resetMemory() {
     this.sigma = {};
+  }
+
+  /**
+   * Restore sigma matrices from saved state (cross-session memory).
+   * @param {object} sigmaData - { "layer_head": Float32Array(N*N) }
+   */
+  restoreSigma(sigmaData) {
+    this.sigma = {};
+    for (const [key, arr] of Object.entries(sigmaData)) {
+      this.sigma[key] = new Float32Array(arr);
+    }
   }
 }

@@ -55,6 +55,9 @@
 
     const cells = svg.selectAll('rect').data(Array.from(submatrix));
 
+    // Set viewBox for responsive scaling
+    svg.attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
+
     cells.enter()
       .append('rect')
       .merge(cells)
@@ -247,8 +250,6 @@
   <div class="heatmap-container">
     <svg
       bind:this={svgEl}
-      width={W}
-      height={H}
       role="img"
       aria-label="Hebbian memory heatmap"
       on:mousemove={handleMouseMove}
@@ -297,7 +298,7 @@
       </p>
       {#if selectedActiveCount === 0 && conceptHints[selectedConcept]}
         <p class="synapse-hint">
-          💡 {conceptHints[selectedConcept]}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;margin-right:3px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>{conceptHints[selectedConcept]}
         </p>
       {/if}
       <div class="synapse-pairs-grid">
@@ -360,7 +361,7 @@
 
   {#if sigmaDelta && sigmaDelta.changedCells > 0}
     <div class="delta-bar">
-      <span class="delta-icon" aria-hidden="true">⚡</span>
+      <span class="delta-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
       <span class="delta-text">
         Δσ: <strong>{sigmaDelta.changedCells}</strong> synapses strengthened
         <span class="delta-stat">(max Δ = {sigmaDelta.maxVal.toFixed(4)})</span>
@@ -479,6 +480,10 @@
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border-subtle);
     display: block;
+    width: 100%;
+    max-width: 256px;
+    height: auto;
+    aspect-ratio: 1;
   }
 
   .legend {
@@ -765,7 +770,7 @@
     flex-wrap: wrap;
   }
 
-  .delta-icon { font-size: 0.75rem; }
+  .delta-icon { display: inline-flex; align-items: center; color: var(--gold); margin-right: 0.2rem; }
 
   .delta-text {
     font-size: 0.75rem;
@@ -800,6 +805,10 @@
   }
 
   @media (max-width: 600px) {
+    .panel {
+      padding: 0.8rem;
+    }
+
     .panel-header {
       flex-direction: column;
     }
@@ -810,6 +819,11 @@
 
     .heatmap-container {
       flex-direction: column;
+      align-items: center;
+    }
+
+    .heatmap-svg {
+      max-width: 100%;
     }
 
     .legend {
@@ -827,6 +841,18 @@
       flex-direction: row;
       height: auto;
       width: 160px;
+    }
+
+    .synapse-pairs-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .synapse-detail {
+      padding: 0.5rem 0.6rem;
+    }
+
+    .synapse-timeline {
+      flex-wrap: wrap;
     }
   }
 </style>

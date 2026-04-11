@@ -18,7 +18,7 @@ from bdh_tiny import BDHTinyModel, TINY_CONFIG, create_model
 from extract import _extract_topology
 
 
-def extract_topologies(model, head=0, top_k=80, threshold_quantile=0.92):
+def extract_topologies(model, head=0, top_k=512, threshold_quantile=0.92):
     """Extract Gx and Gy graph topologies from a BDH model."""
     config = model.config
     nh = config.n_head

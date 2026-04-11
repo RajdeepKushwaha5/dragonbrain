@@ -274,12 +274,34 @@
 
     textarea {
       font-size: 0.85rem;
-      min-height: auto;
+      min-height: 4rem;
     }
 
     .token-stream, .token-empty {
       height: auto;
-      max-height: 6rem;
+      max-height: 5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .input-card {
+      padding: 0.6rem;
+    }
+
+    textarea {
+      font-size: 0.82rem;
+      min-height: 3.5rem;
+      padding: 0.6rem 0.75rem;
+    }
+
+    .token-stream, .token-empty {
+      max-height: 4rem;
+      padding: 0.4rem 0.5rem;
+    }
+
+    .token {
+      font-size: 0.72rem;
+      padding: 1px 4px;
     }
   }
 </style>

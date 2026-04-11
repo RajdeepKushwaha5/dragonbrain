@@ -69,12 +69,26 @@
   }
 
   $: communityCount = [...new Set(Object.values(communityMap))].length;
+  // Sort communities by size (largest first) for the legend
+  $: communitySizes = (() => {
+    const counts = {};
+    for (const c of Object.values(communityMap)) counts[c] = (counts[c] || 0) + 1;
+    const sorted = [...new Set(Object.values(communityMap))].sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
+    const allIds = [...new Set(Object.values(communityMap))].sort((a, b) => a - b);
+    return sorted.map(id => ({
+      id,
+      count: counts[id] || 0,
+      color: COMMUNITY_PALETTE[allIds.indexOf(id) % COMMUNITY_PALETTE.length],
+      label: `C${allIds.indexOf(id) + 1}`,
+    }));
+  })();
+  const MAX_LEGEND = 8;
   $: communityLegend = showCommunities && communityCount > 1
-    ? [...new Set(Object.values(communityMap))].sort((a,b) => a - b).map((id, i) => ({
-        color: COMMUNITY_PALETTE[i % COMMUNITY_PALETTE.length],
-        label: `C${i + 1}`,
-      }))
+    ? communitySizes.slice(0, MAX_LEGEND)
     : [];
+  $: hiddenCommunities = showCommunities && communityCount > MAX_LEGEND
+    ? communityCount - MAX_LEGEND
+    : 0;
 
   // Evolution toggle
   let showEvolution = false;
@@ -122,7 +136,9 @@
   }
 
   const W = 580, H = 420;
-  const sizeScale = d3.scaleSqrt().domain([1, 60]).range([2.5, 16]);
+  // Compute max degree dynamically so we scale correctly for 512 nodes
+  $: maxDegree = currentData.nodes.reduce((m, n) => Math.max(m, n.degree), 1);
+  const sizeScale = d3.scaleSqrt().domain([1, 200]).range([1.2, 10]);
 
   function rebuildGraph() {
     if (!container) return;
@@ -161,8 +177,8 @@
       .data(data.links)
       .enter()
       .append('line')
-      .attr('stroke', d => d.excitatory ? 'rgba(91,141,239,0.4)' : 'rgba(240,98,146,0.3)')
-      .attr('stroke-width', d => Math.max(0.3, Math.abs(d.weight) * 3));
+      .attr('stroke', d => d.excitatory ? 'rgba(91,141,239,0.25)' : 'rgba(240,98,146,0.2)')
+      .attr('stroke-width', d => Math.max(0.15, Math.abs(d.weight) * 1.5));
 
     // Node glow
     g.selectAll('circle.glow')
@@ -170,12 +186,12 @@
       .enter()
       .append('circle')
       .attr('class', 'glow')
-      .attr('r', d => sizeScale(d.degree) * 2.5)
+      .attr('r', d => sizeScale(d.degree) * 2)
       .attr('fill', d => {
         const c = getCommunityColor(d.id);
         return `url(#node-glow-${c.replace('#', '')})`;
       })
-      .attr('opacity', d => Math.min(0.4, d.degree / 80));
+      .attr('opacity', d => Math.min(0.45, d.degree / maxDegree * 0.6));
 
     // Nodes
     const node = g.selectAll('circle.node')
@@ -204,14 +220,18 @@
     node.append('title').text(d => `Neuron #${d.id} · degree ${d.degree}`);
 
     if (simulation) simulation.stop();
+    const nodeCount = data.nodes.length;
+    const chargeMult = nodeCount > 200 ? -12 : -45;
+    const linkDist = nodeCount > 200 ? 15 : 35;
+    const linkStr = nodeCount > 200 ? 0.15 : 0.35;
     simulation = d3.forceSimulation(data.nodes)
       .force('link', d3.forceLink(data.links)
         .id((_, i) => i)
-        .distance(35)
-        .strength(0.35))
-      .force('charge', d3.forceManyBody().strength(-45))
+        .distance(linkDist)
+        .strength(linkStr))
+      .force('charge', d3.forceManyBody().strength(chargeMult))
       .force('center', d3.forceCenter(W / 2, H / 2))
-      .force('collide', d3.forceCollide(d => sizeScale(d.degree) + 3))
+      .force('collide', d3.forceCollide(d => sizeScale(d.degree) + 1))
       .on('tick', () => {
         link
           .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
@@ -302,7 +322,7 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Evolution
       </button>
-      <span class="node-count">{currentData.nodes.length} hubs · {currentData.links.length} edges</span>
+      <span class="node-count">{currentData.nodes.length} neurons · {currentData.links.length} edges</span>
     </div>
   </div>
 
@@ -331,11 +351,14 @@
     <div class="legend">
       {#if communityLegend.length > 1}
         {#each communityLegend as c}
-          <div class="legend-item">
+          <div class="legend-item" title="{c.count} neurons">
             <span class="legend-circle" style="background: {c.color};"></span>
             <span>{c.label}</span>
           </div>
         {/each}
+        {#if hiddenCommunities > 0}
+          <div class="legend-item legend-more">+{hiddenCommunities}</div>
+        {/if}
       {:else}
         <div class="legend-item">
           <span class="legend-circle" style="background: #5b8def;"></span>
@@ -427,7 +450,8 @@
   .mode-right {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .evo-btn {
@@ -515,7 +539,7 @@
 
   .graph-svg {
     width: 100%;
-    height: 400px;
+    height: clamp(280px, 50vw, 400px);
     border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border-default);
@@ -524,14 +548,23 @@
 
   .legend {
     position: absolute;
-    bottom: 10px;
-    right: 10px;
+    bottom: 8px;
+    right: 8px;
     display: flex;
-    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.3rem 0.55rem;
     padding: 0.3rem 0.6rem;
     background: rgba(0, 0, 0, 0.8);
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-subtle);
+    max-width: min(320px, calc(100% - 16px));
+  }
+
+  .legend-more {
+    color: var(--text-dim);
+    font-style: italic;
+    opacity: 0.7;
   }
 
   .legend-item {
@@ -574,6 +607,50 @@
   @media (max-width: 768px) {
     .graph-svg {
       height: 320px;
+    }
+
+    .panel {
+      padding: 0.8rem;
+    }
+
+    .mode-bar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .mode-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .footnote {
+      font-size: 0.78rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .graph-svg {
+      height: 260px;
+    }
+
+    .mode-btn {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.55rem;
+    }
+
+    .evo-btn {
+      font-size: 0.68rem;
+      padding: 0.2rem 0.45rem;
+    }
+
+    .node-count {
+      font-size: 0.66rem;
+    }
+
+    .legend {
+      font-size: 0.6rem;
+      gap: 0.2rem 0.35rem;
+      padding: 0.2rem 0.4rem;
     }
   }
 </style>

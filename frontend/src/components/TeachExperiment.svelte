@@ -23,6 +23,16 @@
   let improvementPct = null;
   let stepLog = [];
 
+  // SVG icons for step log (no emojis)
+  const stepIcons = {
+    clear:    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6"/></svg>',
+    baseline: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    repeat:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>',
+    done:     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    target:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+    default:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>',
+  };
+
   function softmax(logits) {
     let max = -Infinity;
     for (let i = 0; i < logits.length; i++) if (logits[i] > max) max = logits[i];
@@ -68,7 +78,7 @@
 
     // Step 1: Clear sigma memory
     bdhModel.resetMemory();
-    stepLog = [...stepLog, { text: 'Cleared σ memory', icon: '🧹' }];
+    stepLog = [...stepLog, { text: 'Cleared σ memory', icon: 'clear' }];
     await delay(200);
 
     // Step 2: Measure BASELINE loss on test prefix
@@ -83,7 +93,7 @@
       const rank = baselineTopK.findIndex(p => p.token === targetByte) + 1;
       stepLog = [...stepLog, { 
         text: `Baseline loss for '${TARGET_CHAR}': ${baselineLoss.toFixed(3)} (rank #${rank || '>5'})`, 
-        icon: '📊' 
+        icon: 'baseline' 
       }];
     }
 
@@ -143,7 +153,7 @@
 
       stepLog = [...stepLog, { 
         text: `Rep ${rep}/3 complete — σ loss: ${midLoss?.toFixed(3) ?? 'N/A'}`, 
-        icon: rep === 3 ? '✅' : '🔄' 
+        icon: rep === 3 ? 'done' : 'repeat' 
       }];
       await delay(200);
     }
@@ -184,7 +194,7 @@
 
     stepLog = [...stepLog, { 
       text: `After σ loss: ${afterLoss?.toFixed(3)} → ${improvementPct?.toFixed(1)}% improvement`, 
-      icon: '🎯' 
+      icon: 'target' 
     }];
 
     phase = 'done';
@@ -251,7 +261,7 @@
       <div class="teach-log">
         {#each stepLog as step}
           <div class="teach-log-item">
-            <span class="teach-log-icon">{step.icon}</span>
+            <span class="teach-log-icon">{@html stepIcons[step.icon] || stepIcons.default}</span>
             <span class="teach-log-text">{step.text}</span>
           </div>
         {/each}
@@ -474,7 +484,7 @@
     animation: slideUp 0.2s ease;
   }
 
-  .teach-log-icon { flex-shrink: 0; }
+  .teach-log-icon { flex-shrink: 0; display: inline-flex; align-items: center; color: #7dd3fc; }
 
   .teach-results {
     display: flex;

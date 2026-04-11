@@ -21,6 +21,9 @@
   import AboutPage from './components/AboutPage.svelte';
   import SynapseTracer from './components/SynapseTracer.svelte';
   import GuidedTour from './components/GuidedTour.svelte';
+  import GeneratePanel from './components/GeneratePanel.svelte';
+  import TeachExperiment from './components/TeachExperiment.svelte';
+  import TrainingCurves from './components/TrainingCurves.svelte';
 
   const model = new BDHModel();
   const gptModel = new GPTModel();
@@ -43,7 +46,7 @@
   let tourActive = false;
 
   // ── Panel collapse state (progressive disclosure) ──
-  let expandedSections = { activations: true, internals: false, insights: false };
+  let expandedSections = { activations: true, internals: false, insights: false, generation: false, experiments: false };
 
   function toggleSection(key) {
     expandedSections[key] = !expandedSections[key];
@@ -577,6 +580,35 @@
             />
           </div>
           <div data-tour="memory"><MemoryPanel /></div>
+        </div>
+      {/if}
+
+      <!-- Section 4: Text Generation -->
+      <div class="section-header" on:click={() => toggleSection('generation')} role="button" tabindex="0" on:keydown={e => e.key === 'Enter' && toggleSection('generation')}>
+        <span class="section-chevron" class:open={expandedSections.generation}>▸</span>
+        <span class="section-label">Text Generation &amp; Training</span>
+        <span class="section-hint">side-by-side generation + loss curves</span>
+      </div>
+      {#if expandedSections.generation}
+        <div class="panel-row bottom-row" style="animation: slideUp 0.3s ease">
+          <div data-tour="generate">
+            <GeneratePanel bdhModel={model} gptModel={gptModel} modelReady={$modelReady && $gptReady} />
+          </div>
+          <div data-tour="curves">
+            <TrainingCurves />
+          </div>
+        </div>
+      {/if}
+
+      <!-- Section 5: Experiments -->
+      <div class="section-header" on:click={() => toggleSection('experiments')} role="button" tabindex="0" on:keydown={e => e.key === 'Enter' && toggleSection('experiments')}>
+        <span class="section-chevron" class:open={expandedSections.experiments}>▸</span>
+        <span class="section-label">Inference-Time Learning Experiment</span>
+        <span class="section-hint">quantified σ memory proof</span>
+      </div>
+      {#if expandedSections.experiments}
+        <div class="panel-single" style="animation: slideUp 0.3s ease">
+          <TeachExperiment bdhModel={model} gptModel={gptModel} modelReady={$modelReady} />
         </div>
       {/if}
     </section>
@@ -1232,6 +1264,12 @@
   .panel-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    gap: 1.2rem;
+  }
+
+  .panel-single {
+    display: flex;
+    flex-direction: column;
     gap: 1.2rem;
   }
 

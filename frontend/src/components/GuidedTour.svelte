@@ -68,6 +68,27 @@
       icon: 'tracer',
       section: 'insights',
     },
+    {
+      target: '[data-tour="generate"]',
+      title: 'Text Generation',
+      description: 'Type a prompt and watch BDH and GPT generate text side-by-side. Each character is color-coded by loss \u2014 green means confident, red means surprised.',
+      icon: 'generate',
+      section: 'generation',
+    },
+    {
+      target: '[data-tour="curves"]',
+      title: 'Training Curves',
+      description: 'Validation loss over training for both models. Both were trained on Tiny Shakespeare. Hover to inspect exact loss values at each checkpoint.',
+      icon: 'curves',
+      section: 'generation',
+    },
+    {
+      target: null,
+      title: 'Teach Experiment',
+      description: 'Click the Teach button in the header or open the Experiments section. Feeds a phrase 3\u00D7 to build \u03C3 memory, then measures how much the prediction improves \u2014 quantified proof of inference-time learning.',
+      icon: 'teach',
+      section: 'experiments',
+    },
   ];
 
   let currentStep = 0;
@@ -167,6 +188,12 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
           {:else if step.icon === 'tracer'}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          {:else if step.icon === 'generate'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+          {:else if step.icon === 'curves'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          {:else if step.icon === 'teach'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>
           {/if}
         </span>
         <span class="tour-step-count">{currentStep + 1} / {STEPS.length}</span>

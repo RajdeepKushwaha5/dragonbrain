@@ -14,8 +14,11 @@ model/*.onnx
 model/venv/
 model/data/
 
-# Dev-only scripts (not needed for deployment)
+# Dev-only scripts and docs (not needed for deployment)
 DEMO_SCRIPT.md
+PITCH_SCRIPT.txt
+DRAGON_BRAIN_EXPLAINED.txt
+HACKATHON_REFERENCE.txt
 model/generate_mock_data.py
 model/memory_benchmark.py
 model/extract_weights.py

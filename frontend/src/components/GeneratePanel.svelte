@@ -97,9 +97,9 @@
 
             // Update sigma for inference-time learning
             if (bdhResult.layers && bdhResult.layers[0]) {
-              bdhModel.updateSigma(bdhResult.layers[0].x_last, bdhResult.layers[0].xy_last, 0);
+              bdhModel.updateSigma(bdhResult.layers[0].x_last, bdhResult.layers[0].y_last, 0);
               if (bdhResult.layers.length > 1) {
-                bdhModel.updateSigma(bdhResult.layers[1].x_last, bdhResult.layers[1].xy_last, 1);
+                bdhModel.updateSigma(bdhResult.layers[1].x_last, bdhResult.layers[1].y_last, 1);
               }
             }
           } else {

@@ -120,7 +120,7 @@
         const result = await bdhModel.runToken(buf);
         if (result?.layers) {
           for (let l = 0; l < result.layers.length; l++) {
-            bdhModel.updateSigma(result.layers[l].x_last, result.layers[l].xy_last, l);
+            bdhModel.updateSigma(result.layers[l].x_last, result.layers[l].y_last, l);
           }
         }
       }

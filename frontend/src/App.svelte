@@ -346,7 +346,7 @@
   }
 </script>
 
-<main>
+<main class:about-active={currentPage === 'about'}>
   <!-- ── Hero Header ── -->
   <header>
     <div class="header-left">
@@ -666,6 +666,12 @@
     margin-bottom: 1.6rem;
     flex-wrap: wrap;
     gap: 0.8rem;
+    position: relative;
+    z-index: 60;
+  }
+
+  main.about-active {
+    padding-left: 220px;
   }
 
   .logo-row {
@@ -1322,6 +1328,9 @@
   @media (max-width: 1024px) {
     main {
       padding: 0.8rem 1rem 1.5rem;
+    }
+    main.about-active {
+      padding-left: 1rem;
     }
   }
 

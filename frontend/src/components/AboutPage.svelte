@@ -540,7 +540,6 @@
     max-width: 740px;
     margin: 0 auto;
     padding: 2rem 1.5rem 4rem;
-    padding-left: 220px;
     animation: fadeIn 0.3s ease;
     flex: 1;
     min-width: 0;
@@ -962,7 +961,6 @@
     }
     .sidebar.open { transform: translateX(0); }
     .sidebar-toggle { display: flex; }
-    .about { padding-left: 1.5rem; }
     .sidebar-backdrop {
       display: block;
       position: fixed;
@@ -973,7 +971,7 @@
   }
 
   @media (max-width: 768px) {
-    .about { padding: 1.5rem 1rem 3rem; padding-left: 1rem; }
+    .about { padding: 1.5rem 1rem 3rem; }
     .hero h1 { font-size: 1.8rem; }
     .section h2 { font-size: 1.2rem; }
 

@@ -50,6 +50,7 @@ Everything updates live. No server. No API calls. Both models run via ONNX WebAs
 | **Hebbian Memory** | 64x64 heatmap of the co-activation matrix. Hover to see synapse concept labels. Shows how many synapses strengthened per keystroke. |
 | **Memory Scaling** | Chart comparing BDH's constant memory (flat line) vs GPT's KV-cache (grows linearly). Crossover at ~4,096 tokens. |
 | **Attention Pattern** | Token-by-token causal attention heatmap. Switch between heads. |
+| **Synapse Tracer** | Real-time concept-level firing decomposition. Shows which named synapse pairs (currency, proper noun, punctuation) are actively driving predictions, with firing direction and strength. |
 | **Training Curves** | Validation loss over training for both models, rendered on canvas with hover tooltips. |
 
 ### Interactive Tools
@@ -61,13 +62,18 @@ Everything updates live. No server. No API calls. Both models run via ONNX WebAs
 | **Demo Mode** | One-click auto-typing of Shakespeare with all panels animating in sync. |
 | **Teach Mode** | Feed repeated phrases and watch predictions shift as the model memorizes. |
 | **Three Prediction Rows** | BDH Raw, BDH with memory correction, and GPT — with an indicator when memory changes the top prediction. |
+| **Guided Tour** | 12-step interactive tour that walks through every panel — expands collapsed sections automatically, highlights targets, and explains what to look for. |
+| **Quick Guide** | One-click overlay with step-by-step instructions. Escape to close. |
+| **About Page** | Full architecture deep-dive with glossary of all terms, BDH vs Transformer comparison table, layer pipeline formulas, configuration details, and references. |
 
 ### Other
 
 - Layer and head switching (L1/L2, H1/H2)
 - Per-token inference timer (milliseconds)
-- Guided tour overlay
-- About page with formulas and architecture walkthrough
+- Collapsible panel sections (progressive disclosure)
+- Cross-session memory (σ persists via IndexedDB between browser sessions)
+- Synapse concept labels on the Hebbian heatmap with activation timeline
+- Model transparency bar (parameter counts, training data, σ approximation disclaimer)
 - Byte-level tokenization (every character visible)
 - Fully client-side (zero server calls)
 
